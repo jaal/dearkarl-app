@@ -60,16 +60,13 @@ export async function emailHandler(
 
   const send = (to: string, content: EmailContent) =>
     sendEmail(creds, { to, subject: content.subject, text: content.html });
-  // Quoted back in every mail so the user knows which message it is about.
-  const subject = email.subject?.trim() || "—";
-
   const db = new UsersDB(env.DB);
   const user = await db.getUser(message.from);
   if (!user) {
     if (await claimUnknownSenderNotice(env.DB, message.from, Date.now())) {
       await send(
         message.from,
-        unknownSenderEmail({ subject, from: message.from }),
+        unknownSenderEmail({ from: message.from }),
       );
     }
     return;
@@ -83,7 +80,6 @@ export async function emailHandler(
     await send(
       message.from,
       wrongAddressEmail({
-        subject,
         to: toAddress,
         karlAddress: `${user.login}@${karlDomain}`,
       }),
@@ -96,7 +92,7 @@ export async function emailHandler(
 
   const accessToken = await getValidToken(user, client, db);
   if (accessToken === null) {
-    await send(user.email, signInAgainEmail({ subject }));
+    await send(user.email, signInAgainEmail());
     return;
   }
 
@@ -112,7 +108,7 @@ export async function emailHandler(
       filename,
       email.html ? htmlToMarkdown(email.html) : (email.text ?? "NONE"),
     );
-    await send(user.email, savedEmail({ subject, filename }));
+    await send(user.email, savedEmail());
   } catch (e: any) {
     // Only an actual authorization failure should tell the user to log in
     // again — otherwise the advice is wrong and sends them in a loop.
@@ -120,8 +116,8 @@ export async function emailHandler(
     await send(
       user.email,
       isAuthProblem
-        ? signInAgainEmail({ subject })
-        : couldNotSaveEmail({ subject }),
+        ? signInAgainEmail()
+        : couldNotSaveEmail(),
     );
   }
 }

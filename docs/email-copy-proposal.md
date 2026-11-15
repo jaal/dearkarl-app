@@ -20,12 +20,11 @@ The current mails were written one at a time, and it shows:
 | No footer: no contact address, no sender details | One footer on every mail: link to dearkarl.com, contact address, the details EU law requires (see "Footer"). |
 | Subjects use three different styles ("Unknown User", "Access Denied", "Saved to Drive: …") | Every subject is a short plain sentence saying what happened. |
 | A failure mail never says whether anything was saved or whether to send again | Every failure mail says nothing was saved and what to do next. |
-| The mails do not say which message they are about | The subject of the original email is quoted (`{subject}`), so the user knows which one failed. |
+| The mails do not say which message they are about | **Decided 2026-11-15: they still don't.** Mail goes out through Elastic Email (a third party), so nothing from the user's message — its subject or the Drive filename built from it — goes into these mails. |
 | "Access Denied" covers two different situations (token refresh failed / Drive rejected the token) | One mail for both. To the user it is the same thing: "sign in again". |
 | English only | English and Polish (see "Language"). |
 
-Placeholders: `{subject}` = subject of the incoming email, `{filename}` = name
-of the file on Drive, `{from}` = sender address, `{to}` = the DearKarl address
+Placeholders: `{from}` = sender address, `{to}` = the DearKarl address
 it was sent to, `{karl_address}` = the user's own DearKarl address. Every
 placeholder is HTML-escaped, because all of them come from mail anyone can
 send.
@@ -99,24 +98,22 @@ Regulamin: https://dearkarl.com/terms
 **Trigger:** the file was saved to Drive, and the user has the setting
 "Confirm every saved email" turned on (default: on). **To:** `user.email`.
 
-**EN subject:** `Saved: {filename}`
+**EN subject:** `Saved to your Google Drive`
 
 ```text
 Hi,
 
-I saved your email "{subject}" to the dearkarl folder on your Google Drive
-as "{filename}".
+I saved your email to the dearkarl folder on your Google Drive.
 
 Karl
 ```
 
-**PL temat:** `Zapisane: {filename}`
+**PL temat:** `Zapisane na Twoim Dysku Google`
 
 ```text
 Cześć,
 
-zapisałem Twojego maila „{subject}” na Twoim Dysku Google, w folderze
-dearkarl, jako „{filename}”.
+zapisałem Twojego maila na Twoim Dysku Google, w folderze dearkarl.
 
 Karl
 ```
@@ -134,7 +131,7 @@ Sent in both languages, Polish first. At most once per sender address per day
 ```text
 Cześć,
 
-dostałem Twojego maila „{subject}”, ale adres {from} nie jest połączony
+dostałem Twojego maila, ale adres {from} nie jest połączony
 z żadnym kontem DearKarl. Nic nie zapisałem.
 
 Jeśli masz już konto, wyślij maila z adresu Google przypisanego do konta.
@@ -146,7 +143,7 @@ Karl
 
 Hi,
 
-I got your email "{subject}", but {from} isn't linked to a DearKarl account,
+I got your email, but {from} isn't linked to a DearKarl account,
 so I didn't save anything.
 
 If you already have an account, send from the Google address you signed up
@@ -164,7 +161,7 @@ address. **To:** the sender.
 ```text
 Hi,
 
-You sent "{subject}" to {to}, which isn't your DearKarl address, so I didn't
+You sent an email to {to}, which isn't your DearKarl address, so I didn't
 save anything.
 
 Your address is {karl_address}. Send the email there and I'll save it.
@@ -177,7 +174,7 @@ Karl
 ```text
 Cześć,
 
-mail „{subject}” poszedł na {to}, a to nie jest Twój adres DearKarl.
+mail poszedł na {to}, a to nie jest Twój adres DearKarl.
 Nic nie zapisałem.
 
 Twój adres to {karl_address}. Wyślij maila tam, a go zapiszę.
@@ -197,7 +194,7 @@ Karl
 ```text
 Hi,
 
-I couldn't save "{subject}" because my access to your Google Drive has
+I couldn't save your email because my access to your Google Drive has
 expired. Nothing was saved.
 
 Sign in again at https://dearkarl.com, then send the email once more.
@@ -210,7 +207,7 @@ Karl
 ```text
 Cześć,
 
-nie zapisałem „{subject}”, bo wygasł mój dostęp do Twojego Dysku Google.
+nie zapisałem maila, bo wygasł mój dostęp do Twojego Dysku Google.
 
 Zaloguj się ponownie na https://dearkarl.com i wyślij maila jeszcze raz.
 
@@ -225,7 +222,7 @@ Karl
 ```text
 Hi,
 
-I couldn't save "{subject}" to your Google Drive. Nothing was saved.
+I couldn't save your email to your Google Drive. Nothing was saved.
 
 This usually means the drive is full. Free up some space and send the email
 again. If it keeps happening, write to hi@dearkarl.com.
@@ -238,7 +235,7 @@ Karl
 ```text
 Cześć,
 
-nie mogłem zapisać „{subject}” na Twoim Dysku Google.
+nie mogłem zapisać Twojego maila na Twoim Dysku Google.
 
 Najczęściej to znaczy, że dysk jest pełny. Zwolnij trochę miejsca i wyślij
 maila jeszcze raz. Jeśli to się powtarza, napisz do nas:

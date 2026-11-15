@@ -12,11 +12,11 @@ const evil = `<img src=x onerror=alert(1)>`;
 
 describe("mail copy", () => {
   const all = () => [
-    savedEmail({ subject: "s", filename: "f" }),
-    unknownSenderEmail({ subject: "s", from: "a@b.c" }),
-    wrongAddressEmail({ subject: "s", to: "x@k", karlAddress: "y@k" }),
-    signInAgainEmail({ subject: "s" }),
-    couldNotSaveEmail({ subject: "s" }),
+    savedEmail(),
+    unknownSenderEmail({ from: "a@b.c" }),
+    wrongAddressEmail({ to: "x@k", karlAddress: "y@k" }),
+    signInAgainEmail(),
+    couldNotSaveEmail(),
   ];
   const links = (html: string) =>
     [...html.matchAll(/<a href="([^"]*)"[^>]*>([^<]*)<\/a>/g)].map(
@@ -25,11 +25,8 @@ describe("mail copy", () => {
 
   it("escapes every placeholder taken from inbound mail", () => {
     const mails = [
-      savedEmail({ subject: evil, filename: evil }),
-      unknownSenderEmail({ subject: evil, from: evil }),
-      wrongAddressEmail({ subject: evil, to: evil, karlAddress: evil }),
-      signInAgainEmail({ subject: evil }),
-      couldNotSaveEmail({ subject: evil }),
+      unknownSenderEmail({ from: evil }),
+      wrongAddressEmail({ to: evil, karlAddress: evil }),
     ];
     for (const m of mails) {
       expect(m.html).not.toContain("<img");
@@ -66,13 +63,13 @@ describe("mail copy", () => {
   });
 
   it("sends sign-up to dearkarl.com", () => {
-    expect(unknownSenderEmail({ subject: "s", from: "a@b.c" }).html).toContain(
+    expect(unknownSenderEmail({ from: "a@b.c" }).html).toContain(
       '<a href="https://dearkarl.com" style="color:#1a56db">https://dearkarl.com</a>',
     );
   });
 
   it("sends the sign-in-again mail to the reconnect page in the app", () => {
-    expect(signInAgainEmail({ subject: "s" }).html).toContain(
+    expect(signInAgainEmail().html).toContain(
       '<a href="https://dearkarl.com/app/reconnect" style="color:#1a56db">https://dearkarl.com/app/reconnect</a>',
     );
   });
@@ -93,23 +90,28 @@ describe("mail copy", () => {
   });
 
   it("uses the agreed subjects", () => {
-    expect(savedEmail({ subject: "s", filename: "Note" }).subject).toBe(
-      "Saved: Note",
-    );
-    expect(signInAgainEmail({ subject: "s" }).subject).toBe(
+    expect(savedEmail().subject).toBe("Saved to your Google Drive");
+    expect(signInAgainEmail().subject).toBe(
       "Please sign in to DearKarl again",
     );
-    expect(couldNotSaveEmail({ subject: "s" }).subject).toBe(
+    expect(couldNotSaveEmail().subject).toBe(
       "I couldn't save your email",
     );
-    expect(unknownSenderEmail({ subject: "s", from: "a@b.c" }).subject).toBe(
+    expect(unknownSenderEmail({ from: "a@b.c" }).subject).toBe(
       "I don't know this address yet",
     );
   });
 
+  it("never carries the user's email subject or filename (mail goes via Elastic)", () => {
+    // None of the builders accept a subject; this guards against it creeping back.
+    for (const m of all()) {
+      expect(m.subject).not.toMatch(/"|Saved:/);
+      expect(m.html).not.toMatch(/"[^"<>]*"\s+(to|because)|as "/);
+    }
+  });
+
   it("tells the user their right address on mail 3", () => {
     const { html } = wrongAddressEmail({
-      subject: "s",
       to: "abc@dearkarl.com",
       karlAddress: "me123@dearkarl.com",
     });

@@ -4,6 +4,10 @@
  * Every mail follows one template: greeting → what happened → what to do →
  * "Karl" → footer. Every placeholder comes from inbound mail anyone can send,
  * so all of them are HTML-escaped before they reach the body.
+ *
+ * Privacy: mail goes out through Elastic Email, a third party. Nothing from the
+ * user's own message — its subject or the Drive filename built from it — is put
+ * in these mails, so Elastic never sees what people save.
  */
 import { escapeHtml } from "../send-email";
 
@@ -80,16 +84,12 @@ ${foot}
 
 // ---------------------------------------------------------------- 1. Saved
 
-export function savedEmail(v: { subject: string; filename: string }): EmailContent {
-  const subject = escapeHtml(v.subject);
-  const filename = escapeHtml(v.filename);
+export function savedEmail(): EmailContent {
   return {
-    subject: `Saved: ${v.filename}`,
+    subject: "Saved to your Google Drive",
     html: body(
       p("Hi,"),
-      p(
-        `I saved your email "${subject}" to the dearkarl folder on your Google Drive as "${filename}".`,
-      ),
+      p("I saved your email to the dearkarl folder on your Google Drive."),
       p("Karl"),
       footer("You get this after every saved email."),
     ),
@@ -98,15 +98,14 @@ export function savedEmail(v: { subject: string; filename: string }): EmailConte
 
 // ------------------------------------------------- 2. Sender not recognised
 
-export function unknownSenderEmail(v: { subject: string; from: string }): EmailContent {
-  const subject = escapeHtml(v.subject);
+export function unknownSenderEmail(v: { from: string }): EmailContent {
   const from = escapeHtml(v.from);
   return {
     subject: "I don't know this address yet",
     html: body(
       p("Hi,"),
       p(
-        `I got your email "${subject}", but ${from} isn't linked to a DearKarl account, so I didn't save anything.`,
+        `I got your email, but ${from} isn't linked to a DearKarl account, so I didn't save anything.`,
       ),
       p(
         "If you already have an account, send from the Google address you signed up with.",
@@ -123,11 +122,9 @@ export function unknownSenderEmail(v: { subject: string; from: string }): EmailC
 // ------------------------------------------------ 3. Wrong DearKarl address
 
 export function wrongAddressEmail(v: {
-  subject: string;
   to: string;
   karlAddress: string;
 }): EmailContent {
-  const subject = escapeHtml(v.subject);
   const to = escapeHtml(v.to);
   const karl = escapeHtml(v.karlAddress);
   return {
@@ -135,7 +132,7 @@ export function wrongAddressEmail(v: {
     html: body(
       p("Hi,"),
       p(
-        `You sent "${subject}" to ${to}, which isn't your DearKarl address, so I didn't save anything.`,
+        `You sent an email to ${to}, which isn't your DearKarl address, so I didn't save anything.`,
       ),
       p(`Your address is ${karl}. Send the email there and I'll save it.`),
       p("Karl"),
@@ -146,14 +143,13 @@ export function wrongAddressEmail(v: {
 
 // ---------------------------------------------------------- 4. Sign in again
 
-export function signInAgainEmail(v: { subject: string }): EmailContent {
-  const subject = escapeHtml(v.subject);
+export function signInAgainEmail(): EmailContent {
   return {
     subject: "Please sign in to DearKarl again",
     html: body(
       p("Hi,"),
       p(
-        `I couldn't save "${subject}" because my access to your Google Drive has expired. Nothing was saved.`,
+        `I couldn't save your email because my access to your Google Drive has expired. Nothing was saved.`,
       ),
       p(
         `Reconnect your Google Drive here: ${link(RECONNECT)}`,
@@ -167,13 +163,12 @@ export function signInAgainEmail(v: { subject: string }): EmailContent {
 
 // ----------------------------------------------------------- 5. Could not save
 
-export function couldNotSaveEmail(v: { subject: string }): EmailContent {
-  const subject = escapeHtml(v.subject);
+export function couldNotSaveEmail(): EmailContent {
   return {
     subject: "I couldn't save your email",
     html: body(
       p("Hi,"),
-      p(`I couldn't save "${subject}" to your Google Drive. Nothing was saved.`),
+      p("I couldn't save your email to your Google Drive. Nothing was saved."),
       p(
         "This usually means the drive is full. Free up some space and send the email again.",
         `If it keeps happening, write to ${mailto(CONTACT)}.`,
