@@ -1,4 +1,8 @@
-import { DIAGNOSTIC_RECIPIENT, DIAGNOSTIC_SENDER } from "../shared/urls";
+import {
+  DIAGNOSTIC_RECIPIENT,
+  DIAGNOSTIC_SENDER,
+  REPLY_TO,
+} from "../shared/urls";
 
 export interface Email {
   to: string;
@@ -40,6 +44,8 @@ async function sendEmail(
     Recipients: { To: [email.to] },
     Content: {
       From: email.from ?? creds.username,
+      // Replies reach a person, not the sending-only subdomain.
+      ReplyTo: REPLY_TO,
       Subject: email.subject,
       Body: [
         {
