@@ -8,6 +8,8 @@ import {
   isApiTokenCreated,
   isApiTokensList,
   isLoginUrl,
+  isChangeAddressResponse,
+  isResponsePayloadError,
 } from "../shared/api";
 
 // Re-exported so this module remains the frontend's API client surface.
@@ -107,4 +109,25 @@ export const revokeApiToken = async (id: number): Promise<boolean> => {
   } catch {
     return false;
   }
+};
+
+/** Changes the readable part of the Karl address. Returns the new local part,
+    or the reason the server gave for refusing it. */
+export const changeAddressName = async (
+  name: string,
+): Promise<{ karlEmail: string } | { error: string }> => {
+  try {
+    const response = await fetch(ApiPaths.address, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    const result = await response.json();
+    if (response.ok && isChangeAddressResponse(result))
+      return { karlEmail: result.karlEmail };
+    if (isResponsePayloadError(result)) return { error: result.msg };
+  } catch {
+    // fall through
+  }
+  return { error: "Could not change the address. Try again." };
 };

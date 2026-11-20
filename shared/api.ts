@@ -16,6 +16,7 @@ export const ApiPaths = {
   active: api("active"),
   tokens: api("tokens"),
   tokensRevoke: api("tokens/revoke"),
+  address: api("address"),
 } as const;
 
 export function isLoginRequest(url: URL) {
@@ -40,6 +41,10 @@ export function isTokensRequest(url: URL) {
 
 export function isTokensRevokeRequest(url: URL) {
   return url.pathname === ApiPaths.tokensRevoke;
+}
+
+export function isAddressRequest(url: URL) {
+  return url.pathname === ApiPaths.address;
 }
 
 export function isMcpRequest(url: URL) {
@@ -264,4 +269,34 @@ export function isApiTokenCreated(value: unknown): value is ApiTokenCreated {
 
 export function isApiTokensList(value: unknown): value is ApiTokenSummary[] {
   return Array.isArray(value) && value.every(isApiTokenSummary);
+}
+
+/** Body of `POST /api/address`: the new readable part of the Karl address. */
+export type ChangeAddressRequest = {
+  name: string;
+};
+
+export function isChangeAddressRequest(
+  data: unknown,
+): data is ChangeAddressRequest {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    typeof (data as ChangeAddressRequest).name === "string"
+  );
+}
+
+/** Response of `POST /api/address`: the full local part now in use. */
+export interface ChangeAddressResponse {
+  karlEmail: string;
+}
+
+export function isChangeAddressResponse(
+  value: unknown,
+): value is ChangeAddressResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as ChangeAddressResponse).karlEmail === "string"
+  );
 }

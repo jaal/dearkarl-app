@@ -52,6 +52,16 @@ export const ApiErrors = {
     code: "NOT_FOUND",
     msg: "Page not found",
   },
+  AddressInvalid: {
+    status: 400,
+    code: "ADDRESS_INVALID",
+    msg: "That name can't be used in an address",
+  },
+  AddressTaken: {
+    status: 409,
+    code: "ADDRESS_TAKEN",
+    msg: "Someone already uses that name. Try another one.",
+  },
   InternalError: {
     status: 500,
     code: "INTERNAL",

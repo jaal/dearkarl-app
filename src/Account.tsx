@@ -1,7 +1,74 @@
-import React from "react";
+import React, { useState } from "react";
 import style from "./App.module.css";
 import { formatKarlAddress } from "./karlAddress";
 import { ApiTokens } from "./ApiTokens";
+import { changeAddressName } from "./server";
+import { KARL_ADDRESS_DOMAIN } from "./karlAddress";
+import { parseLocalPart } from "../shared/address";
+
+/** Inline editor for the readable part of the address. The prefix and the
+    hash are shown but cannot be edited. */
+function AddressEditor(props: {
+  karlEmail: string;
+  onSaved: (karlEmail: string) => void;
+  onCancel: () => void;
+}): React.JSX.Element {
+  const parsed = parseLocalPart(props.karlEmail);
+  const [name, setName] = useState(parsed?.name ?? "");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    const result = await changeAddressName(name);
+    setSaving(false);
+    if ("error" in result) setError(result.error);
+    else props.onSaved(result.karlEmail);
+  };
+
+  return (
+    <form onSubmit={save} style={{ marginTop: 8 }}>
+      <label className="small" htmlFor="address-name">
+        Change the readable part. {parsed ? "The ending stays" : "A random ending is added"} so
+        the address stays hard to guess.
+      </label>
+      <div className="mono-inline" style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", marginTop: 4 }}>
+        <span>{parsed?.prefix ?? "claude"}-</span>
+        <input
+          id="address-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={32}
+          autoComplete="off"
+          spellCheck={false}
+          required
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "address-error" : undefined}
+        />
+        <span>
+          -{parsed?.hash ?? "xxxxxx"}@{KARL_ADDRESS_DOMAIN}
+        </span>
+      </div>
+      <p className="small">
+        Your current address stops working as soon as you save. Update any
+        forwarding rules that use it.
+      </p>
+      {error && (
+        <p id="address-error" role="alert" className={style.error}>
+          {error}
+        </p>
+      )}
+      <button className="btn" type="submit" disabled={saving}>
+        {saving ? "Saving…" : "Save"}
+      </button>{" "}
+      <button className="btn ghost" type="button" onClick={props.onCancel} disabled={saving}>
+        Cancel
+      </button>
+    </form>
+  );
+}
 
 function Account(props: {
   karlEmail: string;
@@ -10,8 +77,10 @@ function Account(props: {
   busy?: boolean;
   onShowConnect: () => void;
   onLogout: () => void;
+  onAddressChanged: (karlEmail: string) => void;
 }): React.JSX.Element {
   const karlAddress = formatKarlAddress(props.karlEmail);
+  const [editingAddress, setEditingAddress] = useState(false);
 
   return (
     <div className="card">
@@ -30,8 +99,31 @@ function Account(props: {
       <div className="rows" style={{ marginTop: 24 }}>
         <div className="rowitem">
           <span className="k">Your address</span>
-          <span className="v mono-inline">{karlAddress}</span>
+          <span className="v">
+            <span className="mono-inline">{karlAddress}</span>{" "}
+            {!editingAddress && (
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setEditingAddress(true);
+                }}
+              >
+                Change
+              </a>
+            )}
+          </span>
         </div>
+        {editingAddress && (
+          <AddressEditor
+            karlEmail={props.karlEmail}
+            onSaved={(login) => {
+              props.onAddressChanged(login);
+              setEditingAddress(false);
+            }}
+            onCancel={() => setEditingAddress(false)}
+          />
+        )}
         <div className="rowitem">
           <span className="k">Your Drive folder</span>
           <span className="v">

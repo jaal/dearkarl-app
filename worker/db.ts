@@ -1,3 +1,4 @@
+import { HASH_LENGTH } from "../shared/address";
 export interface UserTableRow {
   email: string;
   login?: string;
@@ -50,6 +51,34 @@ class UsersDB {
   /**
    * Fetch a user by session. Returns null if not found.
    */
+  /**
+   * True when another user already has an address with this prefix and name
+   * (whatever their hash). `exceptEmail` leaves the asking user out.
+   */
+  async addressNameTaken(
+    prefixAndName: string,
+    exceptEmail: string | null = null,
+  ): Promise<boolean> {
+    const row = await this.db
+      .prepare(
+        `SELECT 1 AS found FROM users
+         WHERE substr(login, 1, length(login) - ?) = ?
+           AND (? IS NULL OR email <> ?)
+         LIMIT 1`,
+      )
+      .bind(HASH_LENGTH + 1, prefixAndName, exceptEmail, exceptEmail)
+      .first();
+    return row !== null;
+  }
+
+  /** Changes a user's address local part. Throws if another user holds it. */
+  async updateLogin(email: string, login: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET login = ? WHERE email = ?`)
+      .bind(login, email)
+      .run();
+  }
+
   async getUserBySid(sid: string): Promise<UserTableRow | null> {
     const row = await this.db
       .prepare(`SELECT * FROM users WHERE session_id = ?`)

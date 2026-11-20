@@ -205,7 +205,7 @@ export default function Home(): React.JSX.Element {
             <StepIcon kind="clay" />
             <h4>Karl hands you an address</h4>
             <p>
-              Something like <code>claude-x7k2m9@in.dearkarl.com</code>. It is
+              Something like <code>claude-olek-x7k2m9@in.dearkarl.com</code>. It is
               yours and it is secret. Only mail from addresses you have named
               gets through; everything else bounces.
             </p>

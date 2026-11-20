@@ -264,7 +264,7 @@ Mail is stored as untrusted data, never as instructions, and the code behind eac
 **Yes, but it is not open yet.** The hosted version removes the domain, the GitHub repo and the deploy. As described on [dearkarl.com](https://dearkarl.com), it will work like this:
 
 1. **Sign in with Google.** dearkarl creates one folder in your Google Drive and can see that folder only, through Google's [\`drive.file\`](https://developers.google.com/workspace/drive/api/guides/api-specific-auth) permission. It never asks for your mailbox.
-2. **You get your own secret address,** such as [\`claude-x7k2m9@in.dearkarl.com\`](https://dearkarl.com). Only senders you have named get through.
+2. **You get your own secret address,** such as [\`claude-olek-x7k2m9@in.dearkarl.com\`](https://dearkarl.com). Only senders you have named get through.
 3. **Paste one line into Claude Code.** It tells Claude Code where to find the folder.
 
 Each forwarded email is written to that folder as a markdown file. Our server holds the message in memory for a few seconds on the way and never writes it to a disk of ours. The price is not announced yet. The waiting list is on [dearkarl.com](https://dearkarl.com).`,

@@ -11,11 +11,13 @@ import {
   isLogoutRequest,
   isTokensRequest,
   isTokensRevokeRequest,
+  isAddressRequest,
 } from "../../shared/api";
 import UsersDB, { UserTableRow } from "../db";
 import { getPayload, getSid, getValidToken, getUniqueLogin } from "./utils";
 import ErrorResponse, { ApiErrors } from "./errors";
 import { tokenHandler } from "./tokens";
+import { addressHandler } from "./address";
 
 type AccessData = {
   access_token: string;
@@ -42,6 +44,9 @@ export async function loginHandler(
   const url = new URL(request.url);
   if (isTokensRequest(url) || isTokensRevokeRequest(url)) {
     return tokenHandler(request, db);
+  }
+  if (isAddressRequest(url)) {
+    return addressHandler(request, db);
   }
 
   const payload: RequestPayload | null = await getPayload(request);

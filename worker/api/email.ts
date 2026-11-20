@@ -1,3 +1,4 @@
+import { formatAddress } from "../../shared/address";
 import PostalMime from "postal-mime";
 import UsersDB, { claimUnknownSenderNotice } from "../db";
 import GoogleDrive, { DriveAuthError } from "../google/drive";
@@ -72,16 +73,16 @@ export async function emailHandler(
     return;
   }
 
-  const toAddress = email.to?.[0]?.address ?? message.to;
-  const emailToLogin = email.to?.[0]?.address?.split("@")[0];
+  // Match on the envelope recipient, not the To header: with auto-forwarding
+  // (e.g. a Gmail filter) the To header still names the original recipient.
+  const toAddress = message.to.toLowerCase();
+  const emailToLogin = toAddress.split("@")[0];
   if (!emailToLogin || user.login !== emailToLogin) {
-    // The envelope recipient is always on the DearKarl domain.
-    const karlDomain = message.to.split("@")[1] ?? "";
     await send(
       message.from,
       wrongAddressEmail({
         to: toAddress,
-        karlAddress: `${user.login}@${karlDomain}`,
+        karlAddress: formatAddress(user.login ?? ""),
       }),
     );
     return;

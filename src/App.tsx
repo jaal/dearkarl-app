@@ -318,6 +318,7 @@ function App(props: {
             busy={busy}
             onShowConnect={() => setStage("connect")}
             onLogout={logoutGoogle}
+            onAddressChanged={setKarlEmail}
           />
         )}
       </main>
