@@ -1,3 +1,5 @@
+import { APP_URL, SUPPORT_EMAIL } from "../../shared/urls";
+
 interface EmailContent {
   subject: string;
   message: string;
@@ -8,7 +10,7 @@ export const authError = {
   message: `
 Hello!
 <br><br>
-Your access token expired. Please log in to Dear Karl again: <a href="https://karl.przemekkudla.pl">dearkarl.com</a>
+Your access token expired. Please log in to Dear Karl again: <a href="${APP_URL}">dearkarl.com</a>
 <br><br>
 Regards, Karl
 `,
@@ -20,7 +22,7 @@ export const driveError = {
 Hello!
 <br><br>
 I could not save your file. Make sure that you have enough space on your drive. <br>
-You may want to report the issue directly to us: <a href="mailto:support@przemekkudla.pl">support@dearkarl.com</a>
+You may want to report the issue directly to us: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
 <br><br>
 Regards, Karl
 `,
@@ -31,7 +33,7 @@ export const unknownUser = {
   message: `
 Hello!
 <br><br>
-You have sent an email to me, but I didn't recognize you. Please visit Dear Karl's page to create an account and learn more: <a href="https://karl.przemekkudla.pl">dearkarl.com</a>
+You have sent an email to me, but I didn't recognize you. Please visit Dear Karl's page to create an account and learn more: <a href="${APP_URL}">dearkarl.com</a>
 <br><br>
 Regards, Karl
 `,
@@ -42,7 +44,7 @@ export const wrongRecipient = {
   message: `
 Hello!
 <br><br>
-You have sent an email to an unknown email recipient. Please visit Dear Karl's page and check a Karl email assigned to you: <a href="https://karl.przemekkudla.pl">dearkarl.com</a>
+You have sent an email to an unknown email recipient. Please visit Dear Karl's page and check a Karl email assigned to you: <a href="${APP_URL}">dearkarl.com</a>
 <br><br>
 Regards, Karl
 `,

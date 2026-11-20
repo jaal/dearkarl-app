@@ -95,7 +95,7 @@ Notes:
 
 - **Endpoint**: `POST /mcp`
   - local dev: `http://localhost:5173/mcp` (Vite + Cloudflare plugin serves the worker)
-  - production: `https://karl.przemekkudla.pl/mcp`
+  - production: `https://dearkarl.com/mcp`
 - **Transport**: MCP Streamable HTTP (`application/json` responses)
 - **JSON-RPC 2.0** request envelope; responses are JSON-RPC 2.0 results
 - **`protocolVersion`: `2025-06-18`**
@@ -161,7 +161,7 @@ Errors:
 |---|---|
 | Both or neither of `fileId`/`name` given | tool result `isError: true`, "Provide exactly one of fileId or name." |
 | `name` matches nothing | `isError: true`, "No file named \"…\" found…" |
-| Google token cannot be refreshed / Drive rejects it | `ReauthNeededError` → "Google Drive re-authorization required. Log in at https://karl.przemekkudla.pl …" |
+| Google token cannot be refreshed / Drive rejects it | `ReauthNeededError` → "Google Drive re-authorization required. Log in at https://dearkarl.com/app …" |
 | Other Drive failure | `isError: true`, `"Drive error: <message>"` |
 
 ---
@@ -171,7 +171,7 @@ Errors:
 Valid token, full flow against the local dev server:
 
 ```bash
-TOKEN="karl_3fde080a792ccc20a1f993915fc4d93b337c099dbecdcb1a33cce5a43e71ad6a"
+TOKEN="karl_<your-dev-token>"
 URL=http://localhost:5173/mcp
 
 # 1. initialize (protocol handshake)

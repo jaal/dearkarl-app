@@ -1,3 +1,5 @@
+import { DIAGNOSTIC_RECIPIENT, DIAGNOSTIC_SENDER } from "../shared/urls";
+
 export interface Email {
   to: string;
   from?: string;
@@ -11,8 +13,8 @@ export interface ElasticEmailCredentials {
 }
 
 /** Fallback used when DIAGNOSTIC_EMAIL is not configured. */
-const DEFAULT_DIAGNOSTIC_RECIPIENT = "przemekkudla@hotmail.com";
-const DEFAULT_DIAGNOSTIC_SENDER = "diagnostic@przemekkudla.pl";
+const DEFAULT_DIAGNOSTIC_RECIPIENT = DIAGNOSTIC_RECIPIENT;
+const DEFAULT_DIAGNOSTIC_SENDER = DIAGNOSTIC_SENDER;
 
 /**
  * Escape text that will be interpolated into an HTML email body.

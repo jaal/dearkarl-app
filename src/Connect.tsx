@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import style from "./App.module.css";
 import { formatKarlAddress } from "./karlAddress";
 import { createApiToken } from "./server";
+import { MCP_URL } from "../shared/urls";
 
 /** Karl's MCP endpoint. A client connects to it with a Personal Access Token in
     the Authorization header — see worker/mcp/README.md and .claude/skills/
     dearkarl-mcp. */
-const MCP_URL = "https://karl.przemekkudla.pl/mcp";
 const MCP_SERVER_NAME = "dearkarl";
 
 /** Session key for the token the user generates here, so "Show it again" (back

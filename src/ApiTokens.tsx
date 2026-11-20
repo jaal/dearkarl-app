@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import style from "./App.module.css";
 import type { ApiTokenCreated, ApiTokenSummary } from "./server";
 import { createApiToken, listApiTokens, revokeApiToken } from "./server";
+import { MCP_URL } from "../shared/urls";
 
 const EXPIRY_OPTIONS = [
   { label: "Never", days: null },
@@ -108,7 +109,7 @@ export function ApiTokens(): React.JSX.Element {
         Personal Access Tokens let AI tools (MCP clients such as Claude Code or
         Claude Desktop) list and read the files in your <code>dearkarl</code>{" "}
         Google Drive folder. Point them at{" "}
-        <code>https://karl.przemekkudla.pl/mcp</code> and send the token as{" "}
+        <code>{MCP_URL}</code> and send the token as{" "}
         <code>Authorization: Bearer &lt;token&gt;</code>.
       </p>
 
