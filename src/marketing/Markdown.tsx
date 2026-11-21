@@ -8,7 +8,8 @@ import { Link } from "react-router-dom";
 // a full page reload; external links stay plain anchors so they open normally.
 const components: Components = {
   a({ href, children, ...props }) {
-    if (href && href.startsWith("/")) {
+    // App routes go through the router; files (e.g. /regulamin.pdf) do not.
+    if (href && href.startsWith("/") && !/\.[a-z0-9]+$/i.test(href.split("#")[0])) {
       return (
         <Link to={href} {...props}>
           {children}

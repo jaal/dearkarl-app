@@ -8,7 +8,7 @@ export default function Privacy(): React.JSX.Element {
       metaTitle="Polityka prywatności / Privacy notice — dearkarl"
       description="Jakie dane przetwarza dearkarl i po co. What data dearkarl processes, and why."
       pl={{ title: "Polityka prywatności", body: privacyPl }}
-      en={{ title: "Privacy notice", body: privacyEn }}
+      en={{ title: "Privacy notice & imprint", body: privacyEn }}
     />
   );
 }

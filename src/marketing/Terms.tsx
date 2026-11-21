@@ -8,7 +8,7 @@ export default function Terms(): React.JSX.Element {
       metaTitle="Regulamin / Terms of service — dearkarl"
       description="Zasady korzystania z dearkarl. The terms for using dearkarl."
       pl={{ title: "Regulamin", body: termsPl }}
-      en={{ title: "Terms of service", body: termsEn }}
+      en={{ title: "Terms of Service", body: termsEn }}
     />
   );
 }
