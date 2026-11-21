@@ -5,9 +5,14 @@ import { readElasticCredentials, sendDiagnosticEmail } from "./send-email";
 import { MCP_PATH } from "../shared/api";
 import { diagErrorSubject } from "./api/messages";
 import { mcpHandler } from "./mcp/handler";
+import { handleStub, installStubForEmail } from "./dev/stub";
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    // Local walkthroughs only (GOOGLE_STUB=1 in .dev.vars, on localhost).
+    const stubbed = await handleStub(request, env);
+    if (stubbed) return stubbed;
+
     const secret = env.GOOGLE_CLIENT_SECRET;
     if (!secret)
       return new Response(JSON.stringify({ error: "Missing secret" }), {
@@ -29,6 +34,7 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ) {
+    installStubForEmail(env);
     const creds = readElasticCredentials(env.ELASTIC_SECRET);
     if (!creds) {
       console.error("ELASTIC_SECRET is missing or malformed");

@@ -1,0 +1,6 @@
+# Local only (gitignored, never deployed). Fake credentials for the stub in
+# worker/dev/stub.ts: Google and Elastic are simulated, nothing leaves localhost.
+GOOGLE_STUB=1
+GOOGLE_CLIENT_SECRET={"web":{"client_id":"stub","client_secret":"stub","auth_uri":"http://localhost:5173/api/stub/google/auth","token_uri":"https://oauth2.googleapis.com/token","redirect_uri":"http://localhost:5173"}}
+ELASTIC_SECRET={"apiKey":"stub","username":"karl@mail.dearkarl.com"}
+DIAGNOSTIC_EMAIL=hi@dearkarl.com
