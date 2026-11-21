@@ -191,6 +191,40 @@ describe("/api/code", () => {
     expect(mocks.updateUserTokens).toHaveBeenCalled();
     expect(mocks.addUser).not.toHaveBeenCalled();
   });
+
+  it("keeps the session for Google's refresh lifetime, in seconds", async () => {
+    mocks.getUser.mockResolvedValue({ email: "user@example.com", login: "karl" });
+    const res = await loginHandler(codeRequest(), SECRET, noDb);
+    expect(res.headers.get("Set-Cookie")).toMatch(/Max-Age=604740(;|$)/);
+  });
+
+  it("falls back to 30 days when Google gives no refresh lifetime", async () => {
+    mocks.getUser.mockResolvedValue({ email: "user@example.com", login: "karl" });
+    mocks.getAccessToken.mockResolvedValue({
+      access_token: "a",
+      expires_in: "3600",
+      refresh_token: "r",
+      id_token: idToken,
+    });
+    const res = await loginHandler(codeRequest(), SECRET, noDb);
+    expect(res.headers.get("Set-Cookie")).toMatch(/Max-Age=2592000(;|$)/);
+  });
+
+  it("joins a parallel first sign-in instead of failing on the duplicate", async () => {
+    mocks.getUser
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ email: "user@example.com", login: "claude-won-abc234" });
+    mocks.loginExists.mockResolvedValue(false);
+    mocks.addUser.mockRejectedValue(new Error("UNIQUE constraint failed: users.email"));
+
+    const res = await loginHandler(codeRequest(), SECRET, noDb);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ login: "claude-won-abc234", isNewUser: true });
+    expect(mocks.updateUserTokens).toHaveBeenCalledWith(
+      expect.objectContaining({ login: "claude-won-abc234" }),
+    );
+  });
 });
 
 describe("routing", () => {

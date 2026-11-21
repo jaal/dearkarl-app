@@ -221,7 +221,7 @@ export default function Home(): React.JSX.Element {
             <p>
               Something like <code>claude-olek-x7k2m9@in.dearkarl.com</code>. It is
               yours and it is secret. Only mail from addresses you have named
-              gets through; everything else bounces.
+              gets through; anything else is turned away, not saved.
             </p>
           </li>
           <li>

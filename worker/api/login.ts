@@ -2,7 +2,7 @@ import { deleteAccountHandler, sessionHandler } from "./account";
 import GoogleToken from "../google/token";
 import {
   RequestPayload,
-  ResponsePayload,
+  ResponsePayloadProfile,
   isRequestPayloadCode,
   isLoginRequest,
   isCodeRequest,
@@ -21,6 +21,9 @@ import { getPayload, getSid, getValidToken, getUniqueLogin } from "./utils";
 import ErrorResponse, { ApiErrors } from "./errors";
 import { tokenHandler } from "./tokens";
 import { addressHandler } from "./address";
+
+/** Session cookie lifetime when Google does not bound it: 30 days. */
+const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
 
 type AccessData = {
   access_token: string;
@@ -101,7 +104,7 @@ export async function loginHandler(
     const login =
       user?.login ?? (await getUniqueLogin(decoded.email, usersDb));
 
-    const responsePayload: ResponsePayload = {
+    const responsePayload: ResponsePayloadProfile = {
       type: "PROFILE",
       email: decoded.email,
       login,
@@ -121,17 +124,33 @@ export async function loginHandler(
     };
 
     if (user === null) {
-      await usersDb.addUser(userRow);
+      try {
+        await usersDb.addUser(userRow);
+      } catch (e) {
+        // A parallel sign-in for the same new account won the insert (a
+        // double-submitted callback). Join it instead of failing: keep the
+        // stored address, take this sign-in's tokens and session.
+        const winner = await usersDb.getUser(decoded.email);
+        if (!winner?.login) throw e;
+        userRow.login = winner.login;
+        responsePayload.login = winner.login;
+        await usersDb.updateUserTokens(userRow);
+      }
     } else {
       await usersDb.updateUserTokens(userRow);
     }
 
-    const cookieEpires =
-      (access.refresh_token_expires_in as unknown as number) / 1000 - 60;
+    // Google gives refresh_token_expires_in in seconds, and only while the
+    // OAuth app is in testing; otherwise the session lasts SESSION_MAX_AGE.
+    const refreshSeconds = Number(access.refresh_token_expires_in);
+    const cookieMaxAge =
+      Number.isFinite(refreshSeconds) && refreshSeconds > 120
+        ? Math.floor(refreshSeconds) - 60
+        : SESSION_MAX_AGE;
     return new Response(JSON.stringify(responsePayload), {
       status: 200,
       headers: {
-        "Set-Cookie": `sid=${userRow.session_id}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${cookieEpires}`,
+        "Set-Cookie": `sid=${userRow.session_id}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${cookieMaxAge}`,
       },
     });
   }

@@ -13,6 +13,8 @@ import Connect from "./Connect";
 import Destination from "./Destination";
 import SignInRefused from "./SignInRefused";
 import Reconnect from "./Reconnect";
+import Base from "./marketing/Base";
+import usePageMeta from "./marketing/usePageMeta";
 
 function navigateTo(url: string) {
   window.location.href = url;
@@ -31,6 +33,10 @@ const RECONNECT_TTL_MS = 15 * 60 * 1000;
 const RECONNECTED_KEY = "dk_reconnected";
 const SIGNIN_FAILED_KEY = "dk_signin_failed";
 const ACCOUNT_DELETED_KEY = "dk_account_deleted";
+
+const PAGE_TITLE = "Your account — dearkarl";
+const PAGE_DESCRIPTION =
+  "Sign in with Google, get your Karl address, and connect Claude Code.";
 
 const SIGNIN_FAILED_MESSAGE =
   "Google sign-in didn't go through. Please try again.";
@@ -74,6 +80,16 @@ function takePendingReconnect(): boolean {
   const started = Number(readSession(RECONNECT_KEY));
   writeSession(RECONNECT_KEY, null);
   return started > 0 && Date.now() - started < RECONNECT_TTL_MS;
+}
+
+// OAuth codes this page has already started exchanging. React's StrictMode
+// runs effects twice in development, and a code is single-use: the second
+// exchange would fail (or race the first into a duplicate insert).
+const exchangedCodes = new Set<string>();
+
+/** For tests, which reuse codes across cases. */
+export function resetExchangedCodes(): void {
+  exchangedCodes.clear();
 }
 
 function CheckIcon() {
@@ -246,6 +262,8 @@ function App(props: {
 
   useEffect(() => {
     if (props.code) {
+      if (exchangedCodes.has(props.code)) return;
+      exchangedCodes.add(props.code);
       initToken(props.code);
     } else {
       init();
@@ -253,18 +271,18 @@ function App(props: {
     return () => {};
   }, []);
 
-  return (
-    <>
-      <header className="site-head">
-        <a className="brand" href="/">
-          <span className="mark">📬</span> dearkarl
-        </a>
-        <span className="badge">
-          {activeSession ? "Signed in" : "Hosted · free while it's new"}
-        </span>
-      </header>
+  usePageMeta({ title: PAGE_TITLE, description: PAGE_DESCRIPTION });
 
-      <main>
+  // Same frame as the marketing pages (brand bar, paper, footer), so the
+  // site and the app read as one place.
+  return (
+    <Base
+      title={PAGE_TITLE}
+      description={PAGE_DESCRIPTION}
+      authNav={false}
+      badge={activeSession ? "Signed in" : "Free while it's new"}
+    >
+      <div className="app">
         {props.reconnect ? (
           <Reconnect
             userEmail={userEmail}
@@ -420,15 +438,8 @@ function App(props: {
             onAddressChanged={setKarlEmail}
           />
         )}
-      </main>
-
-      <footer className="site-foot">
-        <span>Your mail lands in your Drive, not ours.</span>
-        <span>
-          <a href="/app">Sign in</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
-        </span>
-      </footer>
-    </>
+      </div>
+    </Base>
   );
 }
 

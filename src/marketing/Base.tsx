@@ -12,6 +12,8 @@ interface BaseProps {
   title: string;
   description: string;
   badge?: string;
+  /** The account app (/app) hides Register / Log in: it is that page. */
+  authNav?: boolean;
   children: React.ReactNode;
 }
 
@@ -30,6 +32,7 @@ export default function Base(props: BaseProps): React.JSX.Element {
               {/* Plain links, not <Link>: /app is the account app, which
                   reads the URL once on load. Sign-up and log-in are the same
                   Google flow; the app tells new and returning users apart. */}
+              {props.authNav !== false && (
               <nav className="authnav" aria-label="Account">
                 {signedIn ? (
                   <a href="/app">My account</a>
@@ -41,6 +44,7 @@ export default function Base(props: BaseProps): React.JSX.Element {
                   </>
                 )}
               </nav>
+              )}
             </span>
           </header>
           {props.children}
