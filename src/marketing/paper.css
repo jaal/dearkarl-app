@@ -262,6 +262,9 @@
 .dk .prereq li + li { margin-top: .5rem; }
 .dk .prereq li::before { content: "→"; position: absolute; left: 0; color: var(--ink); }
 .dk .prereq b { color: var(--ink); font-weight: 650; }
+.dk ol.prereq { counter-reset: step; }
+.dk ol.prereq li { counter-increment: step; }
+.dk ol.prereq li::before { content: counter(step) "."; font-family: var(--head); }
 .dk .cta-note { font-size: .86rem; color: var(--muted); margin: 14px 0 0; }
 .dk a.cta-note, .dk .cta-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
 .dk a.cta-note:hover, .dk .cta-note a:hover { color: var(--ink); }

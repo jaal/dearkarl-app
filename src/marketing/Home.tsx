@@ -127,7 +127,7 @@ function StepIcon({ kind }: { kind: string }): React.JSX.Element {
 }
 
 export default function Home(): React.JSX.Element {
-  const cta = useSignedIn() ? "Go to my account" : "Get your address";
+  const cta = useSignedIn() ? "Go to my account" : "Create your free address";
   usePageMeta({
     title: "dearkarl — email anything to your AI",
     description:
@@ -158,29 +158,27 @@ export default function Home(): React.JSX.Element {
       </div>
 
       <div className="lead-card">
-        <span className="flag-pill">Try it now</span>
-        <h2>We'll run it for you.</h2>
-        <ul className="prereq">
+        <h2>What happens when you sign up</h2>
+        <ol className="prereq steps-list">
           <li>
-            <b>Sign in with Google.</b> One approval, one folder — never your
-            mailbox.
+            <b>Sign in with Google.</b> You approve one folder in your Drive,
+            nothing else.
           </li>
           <li>
-            <b>You get your own address.</b> Forward anything to it, from any
-            device.
+            <b>You get your address</b>, like{" "}
+            <code>claude-olek-x7k2m9@in.dearkarl.com</code>.
           </li>
           <li>
-            <b>Connect Claude Code over MCP.</b> One <code>claude mcp add</code>{" "}
-            command with your personal token — nothing to download.
+            <b>You paste one line into Claude Code.</b> It connects Karl over
+            MCP with your own token.
           </li>
-        </ul>
+          <li>
+            <b>You forward something.</b> Your next Claude session sees it.
+          </li>
+        </ol>
         <a className="btn" href="/app">
           {cta}
         </a>
-        <p className="cta-note">
-          Have privacy questions or doubts?{" "}
-          <a href="#faq">Read the answers below</a>.
-        </p>
       </div>
 
       <div className="alt-card">

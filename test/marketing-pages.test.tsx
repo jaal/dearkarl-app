@@ -37,7 +37,7 @@ describe("marketing pages", () => {
       </MemoryRouter>,
     );
     const heroCta = container.querySelector(".hero .btn");
-    expect(heroCta?.textContent).toBe("Get your address");
+    expect(heroCta?.textContent).toBe("Create your free address");
     expect(heroCta?.getAttribute("href")).toBe("/app");
     expect(container.querySelector("#faq")).toBeTruthy();
     const faqLinks = [...container.querySelectorAll('a[href="#faq"]')];
