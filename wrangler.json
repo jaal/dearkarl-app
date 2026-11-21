@@ -2,6 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "dearkarl-app",
   "main": "worker/index.ts",
+  "routes": [
+    { "pattern": "dearkarl.com", "custom_domain": true },
+    { "pattern": "www.dearkarl.com", "custom_domain": true }
+  ],
   "compatibility_date": "2026-08-01",
   "upload_source_maps": true,
   "assets": {
