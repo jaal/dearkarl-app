@@ -6,6 +6,7 @@ import App, { resetExchangedCodes } from "../src/App";
 import * as server from "../src/server";
 
 vi.mock("../src/server", () => ({
+  DRIVE_ACCESS_LOST: "drive-access-lost",
   getActiveSession: vi.fn(),
   getLoginUrl: vi.fn(),
   logout: vi.fn(),
@@ -19,12 +20,17 @@ const mocked = vi.mocked(server);
 const session = { userEmail: "ann@example.com", karlEmail: "abc123@dearkarl.com" };
 
 // jsdom cannot navigate; record where the app sends the browser instead.
-let location: { href: string };
+let location: { href: string; replace: (url: string) => void };
 beforeEach(() => {
   sessionStorage.clear();
   resetExchangedCodes();
   vi.clearAllMocks();
-  location = { href: "http://localhost/app" };
+  location = {
+    href: "http://localhost/app",
+    replace: (url: string) => {
+      location.href = url;
+    },
+  };
   Object.defineProperty(window, "location", { value: location, configurable: true });
   vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
 });
@@ -162,5 +168,20 @@ describe("one-shot notices under StrictMode (effects run twice in dev)", () => {
       </StrictMode>,
     );
     expect(await screen.findByText(/Drive access renewed/i)).toBeTruthy();
+  });
+});
+
+describe("signed in, but Google access is gone", () => {
+  it("sends /app to the reconnect page", async () => {
+    mocked.getActiveSession.mockResolvedValue("drive-access-lost" as never);
+    render(<MemoryRouter><App code={null} /></MemoryRouter>);
+    await waitFor(() => expect(location.href).toBe("/app/reconnect"));
+  });
+
+  it("stays on the reconnect page itself", async () => {
+    mocked.getActiveSession.mockResolvedValue("drive-access-lost" as never);
+    render(<MemoryRouter><App code={null} reconnect /></MemoryRouter>);
+    expect(await screen.findByRole("heading", { name: "Reconnect your Google Drive" })).toBeTruthy();
+    expect(location.href).toBe("http://localhost/app");
   });
 });

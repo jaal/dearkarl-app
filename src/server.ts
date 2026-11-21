@@ -13,16 +13,25 @@ import {
   isResponsePayloadError,
   isResponsePayloadProfile,
 } from "../shared/api";
+import { ApiErrors } from "../shared/errors";
 
 // Re-exported so this module remains the frontend's API client surface.
 export type { ActiveSession, LoginUrl, ApiTokenCreated, ApiTokenSummary };
 export { isActiveSession, isLoginUrl };
 
-export const getActiveSession = async (): Promise<ActiveSession | null> => {
+/** Signed in, but Karl's Google access is gone (revoked or expired): the
+    user must reconnect Drive before mail can be saved again. */
+export const DRIVE_ACCESS_LOST = "drive-access-lost" as const;
+
+export const getActiveSession = async (): Promise<
+  ActiveSession | typeof DRIVE_ACCESS_LOST | null
+> => {
   try {
     const response = await fetch(ApiPaths.active);
     if (!response.ok) {
-      console.info(await response.json());
+      const body = await response.json().catch(() => null);
+      if (isResponsePayloadError(body) && body.code === ApiErrors.InvalidToken.code)
+        return DRIVE_ACCESS_LOST;
       return null;
     }
     const result = await response.json();

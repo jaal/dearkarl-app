@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import style from "./App.module.css";
 import {
   deleteAccount,
+  DRIVE_ACCESS_LOST,
   getActiveSession,
   getLoginUrl,
   logout,
@@ -249,6 +250,17 @@ function App(props: {
     // in development, and the second run finds them already taken.
     if (takeFlag(ACCOUNT_DELETED_KEY)) setAccountDeleted(true);
     const session = await getActiveSession();
+    if (session === DRIVE_ACCESS_LOST) {
+      // Signed in, but Karl can no longer reach their Drive: the only useful
+      // page is the reconnect one (which itself just shows the button).
+      if (!props.reconnect) {
+        window.location.replace("/app/reconnect");
+        return;
+      }
+      setActiveSession(false);
+      setLoading(false);
+      return;
+    }
     if (session) {
       setActiveSession(true);
       setUserEmail(session.userEmail);

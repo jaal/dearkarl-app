@@ -186,12 +186,16 @@ test.describe("4. Google access is lost", () => {
     expect((await stub(request, email)).drive.map((f) => f.content).join()).toContain("found note");
   });
 
-  test("KNOWN BUG: opening /app while access is lost shows sign-up, not reconnect", async ({ page, request }) => {
-    test.fail(true, "Open decision: redirect /app to /app/reconnect when the session is valid but Google access is gone.");
+  test("opening the account while access is lost leads to reconnect", async ({ page, request }) => {
     const { email } = await signUp(page);
     await request.post("/api/stub/expire", { form: { email } });
-    await page.goto("/app");
-    await expect(page.getByRole("heading", { name: "Reconnect your Google Drive" })).toBeVisible({ timeout: 5_000 });
+    await page.goto("/");
+    await page.getByRole("link", { name: "My account", exact: true }).click();
+    await expect(page).toHaveURL(/\/app\/reconnect$/);
+    await expect(page.getByRole("heading", { name: "Reconnect your Google Drive" })).toBeVisible();
+    await page.getByRole("button", { name: "Reconnect Google Drive" }).click();
+    await googleConsent(page, email);
+    await expect(page.getByText("Drive access renewed.")).toBeVisible();
   });
 });
 
@@ -247,11 +251,12 @@ test.describe("6. The site around it", () => {
     }
   });
 
-  test("KNOWN BUG: 'Self-host instead' after declining consent goes nowhere", async ({ page }) => {
-    test.fail(true, "The link is href=\"#\" with preventDefault; it should open the self-hosting guide.");
+  test("'Self-host instead' after declining consent leads to the self-hosting guide", async ({ page }) => {
     await page.goto("/app?error=access_denied");
-    await page.getByRole("link", { name: "Self-host instead" }).click();
-    await expect(page).not.toHaveURL(/localhost:5180\/app/, { timeout: 3_000 });
+    await expect(page.getByRole("link", { name: "Self-host instead" })).toHaveAttribute(
+      "href",
+      "https://github.com/jaal/dearkarl",
+    );
   });
 
   test("no mock-up notes or stale promises on the onboarding pages", async ({ page }) => {

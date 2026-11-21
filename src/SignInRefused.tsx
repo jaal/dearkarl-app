@@ -1,5 +1,8 @@
 import React from "react";
 
+/** The self-hosting guide; the home page links the same place. */
+const SELF_HOST_URL = "https://github.com/jaal/dearkarl";
+
 function SignInRefused(props: { onRetry: () => void }): React.JSX.Element {
   return (
     <>
@@ -35,11 +38,7 @@ function SignInRefused(props: { onRetry: () => void }): React.JSX.Element {
           <button className="btn" onClick={props.onRetry}>
             Try again
           </button>
-          <a
-            className="btn ghost"
-            href="#"
-            onClick={(e) => e.preventDefault()}
-          >
+          <a className="btn ghost" href={SELF_HOST_URL}>
             Self-host instead
           </a>
         </div>
