@@ -9,7 +9,8 @@
  * Pages (all under /api/stub, which the worker serves before the SPA):
  *   /api/stub/google/auth  the fake Google consent screen (Allow / Deny)
  *   /api/stub              outbox, Drive contents, send mail to Karl,
- *                          expire / restore Google access
+ *                          expire / restore one account's Google access
+ *   /api/stub/state?email= the same for one account, as JSON (e2e tests)
  */
 import emailHandler from "../api/email";
 import { readElasticCredentials } from "../send-email";
@@ -25,8 +26,9 @@ type DriveItem = {
 type SentMail = { at: string; to: string; subject: string; html: string };
 
 const state = {
-  /** Google access revoked or lapsed: tokeninfo and refresh both fail. */
-  expired: false,
+  /** Accounts whose Google access is revoked or lapsed: tokeninfo, refresh
+      and Drive all fail for them. Per account, so parallel tests don't mix. */
+  expired: new Set<string>(),
   drive: new Map<string, DriveItem[]>(), // keyed by account email
   outbox: [] as SentMail[],
 };
@@ -91,11 +93,12 @@ async function fakeGoogle(url: URL, init?: RequestInit): Promise<Response> {
     if (form.get("grant_type") === "authorization_code") {
       const code = form.get("code") ?? "";
       if (!code.startsWith("stub:")) return json({ error: "invalid_grant" }, 400);
-      state.expired = false; // a fresh consent renews access
-      return tokenResponse(decodeURIComponent(code.slice(5)), true);
+      const who = decodeURIComponent(code.slice(5));
+      state.expired.delete(who); // a fresh consent renews access
+      return tokenResponse(who, true);
     }
     const email = emailOf(form.get("refresh_token"));
-    if (state.expired || !email) return json({ error: "invalid_grant" }, 400);
+    if (!email || state.expired.has(email)) return json({ error: "invalid_grant" }, 400);
     return tokenResponse(email, false);
   }
   if (url.hostname === "oauth2.googleapis.com" && url.pathname === "/revoke") {
@@ -103,7 +106,7 @@ async function fakeGoogle(url: URL, init?: RequestInit): Promise<Response> {
   }
   if (url.pathname === "/oauth2/v3/tokeninfo") {
     const email = emailOf(url.searchParams.get("access_token"));
-    if (state.expired || !email) return json({ error: "invalid_token" }, 400);
+    if (!email || state.expired.has(email)) return json({ error: "invalid_token" }, 400);
     return json({
       expires_in: "3000",
       scope: "https://www.googleapis.com/auth/drive.file email",
@@ -113,7 +116,7 @@ async function fakeGoogle(url: URL, init?: RequestInit): Promise<Response> {
 
   // Drive
   const email = bearerEmail(init);
-  if (state.expired || !email) return json({ error: { code: 401 } }, 401);
+  if (!email || state.expired.has(email)) return json({ error: { code: 401 } }, 401);
   const items = state.drive.get(email) ?? [];
   state.drive.set(email, items);
   const now = () => new Date().toISOString();
@@ -290,13 +293,31 @@ ${note ? `<p><b>${esc(note)}</b></p>` : ""}
 </form>
 
 <h2>Google access</h2>
-<p>Now: <b>${state.expired ? "expired (refresh fails)" : "valid"}</b></p>
-<form method="post" action="/api/stub/expire" style="display:inline"><button>Expire access</button></form>
-<form method="post" action="/api/stub/restore" style="display:inline"><button>Restore access</button></form>
+<p>Expired now: <b>${state.expired.size ? esc([...state.expired].join(", ")) : "none"}</b></p>
+<form method="post" action="/api/stub/expire">
+  <label>Account<input name="email" value="ania@example.com"></label>
+  <button>Expire access</button>
+  <button formaction="/api/stub/restore">Restore access</button>
+</form>
 
 <h2>Outbox (Elastic) — ${state.outbox.length}</h2>${outbox || "<p>Empty.</p>"}
 <h2>Drive</h2>${drives || "<p>Empty.</p>"}`,
   );
+}
+
+/** JSON view for end-to-end tests: one account's mail, Drive and access. */
+function stateFor(raw: string): Response {
+  const email = raw.trim().toLowerCase();
+  const files = (state.drive.get(email) ?? [])
+    .filter((i) => i.mimeType !== FOLDER_MIME)
+    .map(({ name, content }) => ({ name, content }));
+  return json({
+    expired: state.expired.has(email),
+    outbox: state.outbox
+      .filter((m) => m.to.toLowerCase() === email)
+      .map(({ to, subject, html }) => ({ to, subject, html })),
+    drive: files,
+  });
 }
 
 async function sendToKarl(request: Request, env: Env): Promise<Response> {
@@ -369,11 +390,16 @@ export async function handleStub(
     case "/api/stub/send":
       return sendToKarl(request, env);
     case "/api/stub/expire":
-      state.expired = true;
-      return back("Google access expired.");
-    case "/api/stub/restore":
-      state.expired = false;
-      return back("Google access restored.");
+    case "/api/stub/restore": {
+      const email = String((await request.formData()).get("email") ?? "")
+        .trim()
+        .toLowerCase();
+      if (url.pathname === "/api/stub/expire") state.expired.add(email);
+      else state.expired.delete(email);
+      return back(`Google access for ${email} ${url.pathname.endsWith("expire") ? "expired" : "restored"}.`);
+    }
+    case "/api/stub/state":
+      return stateFor(url.searchParams.get("email") ?? "");
   }
   return new Response("Not found", { status: 404 });
 }

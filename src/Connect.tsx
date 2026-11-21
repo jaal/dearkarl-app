@@ -185,8 +185,8 @@ function Connect(props: {
             </li>
             <li>
               <b>Mail is accepted from:</b> <code>{props.userEmail}</code> — and
-              nothing else. Anything from another address bounces back to
-              whoever sent it.
+              nothing else. Anything from another address is turned away, not
+              saved.
             </li>
           </ul>
         </div>

@@ -245,13 +245,15 @@ function App(props: {
   // the session check (only used to show the user's email) is in flight.
   const init = async () => {
     if (takeFlag(SIGNIN_FAILED_KEY)) setError(SIGNIN_FAILED_MESSAGE);
-    setAccountDeleted(takeFlag(ACCOUNT_DELETED_KEY));
+    // One-shot flags only ever switch a notice on: StrictMode runs this twice
+    // in development, and the second run finds them already taken.
+    if (takeFlag(ACCOUNT_DELETED_KEY)) setAccountDeleted(true);
     const session = await getActiveSession();
     if (session) {
       setActiveSession(true);
       setUserEmail(session.userEmail);
       setKarlEmail(session.karlEmail);
-      setReconnected(takeFlag(RECONNECTED_KEY));
+      if (takeFlag(RECONNECTED_KEY)) setReconnected(true);
     } else {
       setActiveSession(false);
       setUserEmail("");

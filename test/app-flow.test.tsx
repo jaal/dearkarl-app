@@ -136,3 +136,31 @@ describe("OAuth code exchange", () => {
     expect(mocked.requestToken).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("one-shot notices under StrictMode (effects run twice in dev)", () => {
+  it("still shows 'Your account is deleted'", async () => {
+    sessionStorage.setItem("dk_account_deleted", "1");
+    mocked.getActiveSession.mockResolvedValue(null as never);
+    render(
+      <StrictMode>
+        <MemoryRouter>
+          <App code={null} />
+        </MemoryRouter>
+      </StrictMode>,
+    );
+    expect(await screen.findByText(/Your account is deleted/i)).toBeTruthy();
+  });
+
+  it("still shows 'Drive access renewed'", async () => {
+    sessionStorage.setItem("dk_reconnected", "1");
+    mocked.getActiveSession.mockResolvedValue(session as never);
+    render(
+      <StrictMode>
+        <MemoryRouter>
+          <App code={null} />
+        </MemoryRouter>
+      </StrictMode>,
+    );
+    expect(await screen.findByText(/Drive access renewed/i)).toBeTruthy();
+  });
+});

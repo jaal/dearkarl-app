@@ -105,8 +105,8 @@ function Address(props: {
         <div className="warn">
           <p>
             <b>Keep it to yourself.</b> Only mail from your own addresses gets
-            through — everything else bounces. That is on by default, not a
-            setting.
+            through — anything else is turned away, not saved. That is on by
+            default, not a setting.
           </p>
         </div>
 
@@ -116,15 +116,9 @@ function Address(props: {
               Forward from <code>{props.userEmail}</code>.
             </b>
           </p>
-          <p className="small" style={{ marginBottom: ".8em" }}>
-            That is the address you signed in with. Mail from anywhere else
-            bounces before it reaches your Drive.
-          </p>
           <p className="small" style={{ marginBottom: 0 }}>
-            <i>
-              [ inert in this mock: an optional "I also forward from…" field, and
-              the same list lives on your account page ]
-            </i>
+            That is the address you signed in with. Mail from anywhere else is
+            turned away before it reaches your Drive.
           </p>
         </div>
 
