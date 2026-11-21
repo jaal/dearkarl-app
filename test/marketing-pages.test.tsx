@@ -1,5 +1,5 @@
-import { afterEach, describe, it, expect } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Home from "../src/marketing/Home";
 import BlogIndex from "../src/marketing/BlogIndex";
@@ -7,6 +7,7 @@ import BlogPost from "../src/marketing/BlogPost";
 import Privacy from "../src/marketing/Privacy";
 import Terms from "../src/marketing/Terms";
 import NotFound from "../src/marketing/NotFound";
+import { resetSignedIn } from "../src/marketing/useSignedIn";
 
 // No vitest globals here, so Testing Library cannot unmount on its own; without
 // this, every render piles up in one document and ids like #faq repeat.
@@ -53,6 +54,25 @@ describe("marketing pages", () => {
     const links = [...nav.querySelectorAll("a")];
     expect(links.map((a) => a.textContent)).toEqual(["Register", "Log in"]);
     expect(links.every((a) => a.getAttribute("href") === "/app")).toBe(true);
+  });
+
+  it("shows My account instead of Register / Log in when signed in", async () => {
+    resetSignedIn();
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ signedIn: true })));
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+    const nav = screen.getByRole("navigation", { name: "Account" });
+    await waitFor(() => expect(nav.textContent).toBe("My account"));
+    expect(nav.querySelector("a")?.getAttribute("href")).toBe("/app");
+    expect(screen.getAllByText("Go to my account").length).toBe(2);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    fetchMock.mockRestore();
+    resetSignedIn();
   });
 
   it("renders the blog index", () => {

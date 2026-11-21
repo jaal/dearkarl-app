@@ -2,6 +2,7 @@ import React from "react";
 import Base from "./Base";
 import Waitlist from "./Waitlist";
 import usePageMeta from "./usePageMeta";
+import useSignedIn from "./useSignedIn";
 import { SITE, refs, plain } from "./site";
 
 // One list feeds both the visible questions and the FAQPage schema, so the
@@ -123,6 +124,7 @@ function StepIcon({ kind }: { kind: string }): React.JSX.Element {
 }
 
 export default function Home(): React.JSX.Element {
+  const cta = useSignedIn() ? "Go to my account" : "Get your address";
   usePageMeta({
     title: "dearkarl — email anything to your AI",
     description:
@@ -143,7 +145,7 @@ export default function Home(): React.JSX.Element {
         </p>
         <div className="hero-cta">
           <a className="btn" href="/app">
-            Get your address
+            {cta}
           </a>
           <a className="cta-note" href="#faq">
             Have privacy questions or doubts? Read the answers ↓
@@ -169,7 +171,7 @@ export default function Home(): React.JSX.Element {
           </li>
         </ul>
         <a className="btn" href="/app">
-          Get your address
+          {cta}
         </a>
         <p className="cta-note">
           Have privacy questions or doubts?{" "}

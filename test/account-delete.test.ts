@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteAccountHandler } from "../worker/api/account";
+import { deleteAccountHandler, sessionHandler } from "../worker/api/account";
 
 const mocks = vi.hoisted(() => ({
   getUserBySid: vi.fn(),
@@ -57,5 +57,27 @@ describe("POST /api/account/delete", () => {
     const google = { revokeGoogleToken: vi.fn() };
     expect((await deleteAccountHandler(req(), noDb, google)).ok).toBe(false);
     expect(mocks.deleteAccount).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/session", () => {
+  const get = (sid: string | null) =>
+    new Request("https://dearkarl.com/api/session", {
+      headers: sid ? { cookie: `sid=${sid}` } : {},
+    });
+
+  it("says signed in for a known session", async () => {
+    const res = await sessionHandler(get("sid-1"), noDb);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ signedIn: true });
+  });
+
+  it("says signed out, with a 200, for no or an unknown session", async () => {
+    mocks.getUserBySid.mockResolvedValue(null);
+    for (const sid of [null, "stale"]) {
+      const res = await sessionHandler(get(sid), noDb);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ signedIn: false });
+    }
   });
 });

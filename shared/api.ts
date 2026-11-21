@@ -18,6 +18,7 @@ export const ApiPaths = {
   tokensRevoke: api("tokens/revoke"),
   address: api("address"),
   accountDelete: api("account/delete"),
+  session: api("session"),
 } as const;
 
 export function isLoginRequest(url: URL) {
@@ -50,6 +51,24 @@ export function isAddressRequest(url: URL) {
 
 export function isAccountDeleteRequest(url: URL) {
   return url.pathname === ApiPaths.accountDelete;
+}
+
+export function isSessionRequest(url: URL) {
+  return url.pathname === ApiPaths.session;
+}
+
+/** Response of `GET /api/session`: is this browser signed in? Cheap: it only
+    looks the session cookie up, it never calls Google (unlike /api/active). */
+export interface SessionStatus {
+  signedIn: boolean;
+}
+
+export function isSessionStatus(value: unknown): value is SessionStatus {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as SessionStatus).signedIn === "boolean"
+  );
 }
 
 export function isMcpRequest(url: URL) {

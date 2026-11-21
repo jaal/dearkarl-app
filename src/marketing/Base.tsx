@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { SITE, OPERATOR } from "./site";
+import useSignedIn from "./useSignedIn";
 
 // Every marketing page's frame: the brand bar and the footer. Pages fill the
 // middle via children. In the SPA the shell HTML is shared, so the page's
@@ -15,6 +16,7 @@ interface BaseProps {
 }
 
 export default function Base(props: BaseProps): React.JSX.Element {
+  const signedIn = useSignedIn();
   return (
     <div className="dk">
       <main>
@@ -29,9 +31,15 @@ export default function Base(props: BaseProps): React.JSX.Element {
                   reads the URL once on load. Sign-up and log-in are the same
                   Google flow; the app tells new and returning users apart. */}
               <nav className="authnav" aria-label="Account">
-                <a href="/app">Register</a>
-                <span aria-hidden="true"> / </span>
-                <a href="/app">Log in</a>
+                {signedIn ? (
+                  <a href="/app">My account</a>
+                ) : (
+                  <>
+                    <a href="/app">Register</a>
+                    <span aria-hidden="true"> / </span>
+                    <a href="/app">Log in</a>
+                  </>
+                )}
               </nav>
             </span>
           </header>

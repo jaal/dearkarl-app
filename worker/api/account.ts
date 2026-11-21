@@ -1,3 +1,4 @@
+import type { SessionStatus } from "../../shared/api";
 import UsersDB from "../db";
 import ErrorResponse, { ApiErrors } from "./errors";
 import { getSid } from "./utils";
@@ -44,5 +45,22 @@ export async function deleteAccountHandler(
       "Content-Type": "application/json",
       "Set-Cookie": "sid=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0",
     },
+  });
+}
+
+/**
+ * `GET /api/session`: `{ signedIn }` for the marketing pages' "My account"
+ * link. Always 200, so a signed-out visitor causes no error in the console.
+ */
+export async function sessionHandler(
+  request: Request,
+  db: Env["DB"],
+): Promise<Response> {
+  const sid = getSid(request);
+  const user = sid ? await new UsersDB(db).getUserBySid(sid) : null;
+  const body: SessionStatus = { signedIn: user !== null };
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
