@@ -56,7 +56,9 @@ export default function Base(props: BaseProps): React.JSX.Element {
             <b>📬 dearkarl</b> — email anything to your AI.
             <br />
             Run by <b>{OPERATOR.legalName}</b>, Wrocław, Poland.
-            <br />© 2026 · Self-hosting is free and always will be.
+            <br />Self-hosting is free and always will be.
+            <br />© 2026 DearKarl - Email anything to your AI privately. All
+            rights reserved. Made with ❤️ in Wrocław &amp; Zagościniec, Poland 🇵🇱
           </p>
           <nav aria-label="Footer">
             <Link to="/blog">Blog</Link>
