@@ -79,10 +79,12 @@ function Account(props: {
   busy?: boolean;
   onShowConnect: () => void;
   onLogout: () => void;
+  onDeleteAccount: () => void;
   onAddressChanged: (karlEmail: string) => void;
 }): React.JSX.Element {
   const karlAddress = formatKarlAddress(props.karlEmail);
   const [editingAddress, setEditingAddress] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
     <div className="card">
@@ -185,6 +187,53 @@ function Account(props: {
           >
             Log out
           </button>
+        </div>
+        <div className="rowitem">
+          <span>
+            <span className="v">Delete account</span>
+            <br />
+            <span className="small">
+              {confirmingDelete ? (
+                <>
+                  <b>This cannot be undone.</b> Your address{" "}
+                  <code>{karlAddress}</code> stops working at once, Karl loses
+                  access to your Drive, and we delete what we hold about you.
+                  The dearkarl folder and every file in it stay in your Drive.
+                </>
+              ) : (
+                <>
+                  Gives up your address and removes what we hold about you. Your
+                  folder and its files stay in your Drive.
+                </>
+              )}
+            </span>
+          </span>
+          {confirmingDelete ? (
+            <span className="btn-row" style={{ marginTop: 0 }}>
+              <button
+                className="btn ghost"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={props.busy}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn"
+                onClick={props.onDeleteAccount}
+                disabled={props.busy}
+              >
+                Yes, delete my account
+              </button>
+            </span>
+          ) : (
+            <button
+              className="btn ghost"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={props.busy}
+            >
+              Delete account
+            </button>
+          )}
         </div>
       </div>
 

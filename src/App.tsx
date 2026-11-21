@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import style from "./App.module.css";
-import { getActiveSession, getLoginUrl, logout, requestToken } from "./server";
+import {
+  deleteAccount,
+  getActiveSession,
+  getLoginUrl,
+  logout,
+  requestToken,
+} from "./server";
 import Account from "./Account";
 import Address from "./Address";
 import Connect from "./Connect";
@@ -24,6 +30,7 @@ const RECONNECT_TTL_MS = 15 * 60 * 1000;
 // One-shot flags set by the OAuth callback and read by the page it lands on.
 const RECONNECTED_KEY = "dk_reconnected";
 const SIGNIN_FAILED_KEY = "dk_signin_failed";
+const ACCOUNT_DELETED_KEY = "dk_account_deleted";
 
 const SIGNIN_FAILED_MESSAGE =
   "Google sign-in didn't go through. Please try again.";
@@ -152,6 +159,7 @@ function App(props: {
   const [newsletter, setNewsletter] = useState(false);
   const [stage, setStage] = useState<Stage>(readStage);
   const [reconnected, setReconnected] = useState(false);
+  const [accountDeleted, setAccountDeleted] = useState(false);
 
   const goToAccount = () => {
     setStage("account");
@@ -177,6 +185,19 @@ function App(props: {
     setBusy(true);
     writeSession(STAGE_KEY, null);
     await logout();
+    navigateTo("/app");
+  };
+
+  const deleteAccountGoogle = async () => {
+    setError("");
+    setBusy(true);
+    if (!(await deleteAccount())) {
+      setError("Could not delete your account. Please try again.");
+      setBusy(false);
+      return;
+    }
+    writeSession(STAGE_KEY, null);
+    writeSession(ACCOUNT_DELETED_KEY, "1");
     navigateTo("/app");
   };
 
@@ -208,6 +229,7 @@ function App(props: {
   // the session check (only used to show the user's email) is in flight.
   const init = async () => {
     if (takeFlag(SIGNIN_FAILED_KEY)) setError(SIGNIN_FAILED_MESSAGE);
+    setAccountDeleted(takeFlag(ACCOUNT_DELETED_KEY));
     const session = await getActiveSession();
     if (session) {
       setActiveSession(true);
@@ -261,6 +283,16 @@ function App(props: {
             />
           ) : (
             <>
+              {accountDeleted && (
+                <div className="card narrow" role="status">
+                  <h1>Your account is deleted</h1>
+                  <p className="lede">
+                    Your Karl address no longer works and Karl no longer has
+                    access to your Drive. The dearkarl folder and its files are
+                    still in your Drive, and stay yours.
+                  </p>
+                </div>
+              )}
               <nav className="steps" aria-label="Progress">
                 <ol>
                   <li className="on">
@@ -384,6 +416,7 @@ function App(props: {
             busy={busy}
             onShowConnect={() => setStage("connect")}
             onLogout={logoutGoogle}
+            onDeleteAccount={deleteAccountGoogle}
             onAddressChanged={setKarlEmail}
           />
         )}

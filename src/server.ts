@@ -53,6 +53,16 @@ export const logout = async () => {
   } catch {}
 };
 
+/** Deletes the signed-in user's account. True when it is gone. */
+export const deleteAccount = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(ApiPaths.accountDelete, { method: "POST" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
 export const requestToken = async (
   code: string,
 ): Promise<ResponsePayloadProfile | null> => {

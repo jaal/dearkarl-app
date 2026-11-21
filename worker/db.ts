@@ -38,6 +38,17 @@ class UsersDB {
   }
 
   /**
+   * Deletes the user and every API token they made, in one transaction.
+   * The Drive folder is the user's and is not touched.
+   */
+  async deleteAccount(email: string): Promise<void> {
+    await this.db.batch([
+      this.db.prepare(`DELETE FROM api_tokens WHERE email = ?`).bind(email),
+      this.db.prepare(`DELETE FROM users WHERE email = ?`).bind(email),
+    ]);
+  }
+
+  /**
    * Returns true when a login is already taken by any user.
    */
   async loginExists(login: string): Promise<boolean> {

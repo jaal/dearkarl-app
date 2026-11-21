@@ -8,6 +8,7 @@ vi.mock("../src/server", () => ({
   getLoginUrl: vi.fn(),
   logout: vi.fn(),
   requestToken: vi.fn(),
+  deleteAccount: vi.fn(),
   // The account page lists personal access tokens on mount.
   listApiTokens: vi.fn().mockResolvedValue([]),
 }));
@@ -87,5 +88,33 @@ describe("/app/reconnect", () => {
     fireEvent.click(button);
     const busy = await screen.findByRole("button", { name: "Opening Google…" });
     expect((busy as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe("deleting the account", () => {
+  it("asks once more, deletes, and says so on the sign-in page", async () => {
+    mocked.getActiveSession.mockResolvedValue(session as never);
+    mocked.deleteAccount.mockResolvedValue(true);
+    render(<App code={null} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Delete account" }));
+    expect(mocked.deleteAccount).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /Yes, delete my account/i }));
+    await waitFor(() => expect(location.href).toBe("/app"));
+    expect(mocked.deleteAccount).toHaveBeenCalledOnce();
+    cleanup();
+
+    mocked.getActiveSession.mockResolvedValue(null as never);
+    render(<App code={null} />);
+    expect(await screen.findByText(/Your account is deleted/i)).toBeTruthy();
+  });
+
+  it("stays on the account page with an error when deletion fails", async () => {
+    mocked.getActiveSession.mockResolvedValue(session as never);
+    mocked.deleteAccount.mockResolvedValue(false);
+    render(<App code={null} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Delete account" }));
+    fireEvent.click(screen.getByRole("button", { name: /Yes, delete my account/i }));
+    expect(await screen.findByText(/Could not delete your account/i)).toBeTruthy();
+    expect(location.href).toBe("http://localhost/app");
   });
 });

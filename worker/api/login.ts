@@ -1,3 +1,4 @@
+import { deleteAccountHandler } from "./account";
 import GoogleToken from "../google/token";
 import {
   RequestPayload,
@@ -9,6 +10,7 @@ import {
   ActiveSession,
   LoginUrl,
   isLogoutRequest,
+  isAccountDeleteRequest,
   isTokensRequest,
   isTokensRevokeRequest,
   isAddressRequest,
@@ -47,6 +49,9 @@ export async function loginHandler(
   }
   if (isAddressRequest(url)) {
     return addressHandler(request, db);
+  }
+  if (isAccountDeleteRequest(url)) {
+    return deleteAccountHandler(request, db, new GoogleToken(secret));
   }
 
   const payload: RequestPayload | null = await getPayload(request);

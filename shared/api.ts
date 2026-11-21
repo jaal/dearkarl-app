@@ -17,6 +17,7 @@ export const ApiPaths = {
   tokens: api("tokens"),
   tokensRevoke: api("tokens/revoke"),
   address: api("address"),
+  accountDelete: api("account/delete"),
 } as const;
 
 export function isLoginRequest(url: URL) {
@@ -45,6 +46,10 @@ export function isTokensRevokeRequest(url: URL) {
 
 export function isAddressRequest(url: URL) {
   return url.pathname === ApiPaths.address;
+}
+
+export function isAccountDeleteRequest(url: URL) {
+  return url.pathname === ApiPaths.accountDelete;
 }
 
 export function isMcpRequest(url: URL) {
