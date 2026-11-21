@@ -4,12 +4,14 @@ import {
   type ApiTokenCreated,
   type ApiTokenSummary,
   type LoginUrl,
+  type ResponsePayloadProfile,
   isActiveSession,
   isApiTokenCreated,
   isApiTokensList,
   isLoginUrl,
   isChangeAddressResponse,
   isResponsePayloadError,
+  isResponsePayloadProfile,
 } from "../shared/api";
 
 // Re-exported so this module remains the frontend's API client surface.
@@ -51,7 +53,9 @@ export const logout = async () => {
   } catch {}
 };
 
-export const requestToken = async (code: string): Promise<LoginUrl | null> => {
+export const requestToken = async (
+  code: string,
+): Promise<ResponsePayloadProfile | null> => {
   try {
     const response = await fetch(ApiPaths.code, {
       method: "POST",
@@ -63,7 +67,7 @@ export const requestToken = async (code: string): Promise<LoginUrl | null> => {
       return null;
     }
     const result = await response.json();
-    return isLoginUrl(result) ? result : null;
+    return isResponsePayloadProfile(result) ? result : null;
   } catch {
     return null;
   }
