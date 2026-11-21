@@ -182,6 +182,26 @@ export function couldNotSaveEmail(): EmailContent {
 
 // ------------------------------------------------------------ Operator mails
 
+// ------------------------------------------------------- 6. Sign-in code
+
+export function loginCodeEmail(v: { code: string; minutes: number }): EmailContent {
+  const code = escapeHtml(v.code);
+  return {
+    subject: `Your DearKarl sign-in code: ${code}`,
+    html: body(
+      p("Hi,"),
+      p("Here is your code to log in to DearKarl:"),
+      `<p style="margin:0 0 16px;font-size:28px;letter-spacing:6px;font-weight:600">${code}</p>`,
+      p(
+        `It works once, for ${v.minutes} minutes.`,
+        "If you didn't ask for it, ignore this email; nobody can log in without the code.",
+      ),
+      p("Karl"),
+      footer(ACCOUNT_WHY),
+    ),
+  };
+}
+
 export const DIAG_PREFIX = "[DearKarl]";
 
 export const diagAuthRejectedSubject = `${DIAG_PREFIX} Rejected: sender authentication failed`;

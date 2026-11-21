@@ -157,43 +157,6 @@ export default function Home(): React.JSX.Element {
         </div>
       </div>
 
-      <div className="lead-card">
-        <h2>What happens when you sign up</h2>
-        <ol className="prereq steps-list">
-          <li>
-            <b>Sign in with Google.</b> You approve one folder in your Drive,
-            nothing else.
-          </li>
-          <li>
-            <b>You get your address</b>, like{" "}
-            <code>claude-olek-x7k2m9@in.dearkarl.com</code>.
-          </li>
-          <li>
-            <b>You paste one line into Claude Code.</b> It connects Karl over
-            MCP with your own token.
-          </li>
-          <li>
-            <b>You forward something.</b> Your next Claude session sees it.
-          </li>
-        </ol>
-        <a className="btn" href="/app">
-          {cta}
-        </a>
-      </div>
-
-      <div className="alt-card">
-        <h3>Prefer to run it yourself? It works today.</h3>
-        <p className="small">
-          The whole pipe runs on your own accounts — free, unlimited, forever.
-          No server of ours sits in the path, so there is nothing of ours to
-          trust. You need a domain on Cloudflare (about $10 a year), a GitHub
-          account, and about fifteen minutes with Claude Code.
-        </p>
-        <a className="btn ghost sm" href="https://github.com/jaal/dearkarl">
-          Self-host it free →
-        </a>
-      </div>
-
       <section className="lp-sec" id="how">
         <h2>
           <span className="g" aria-hidden="true">
@@ -245,6 +208,19 @@ export default function Home(): React.JSX.Element {
           </li>
         </ol>
       </section>
+
+      <div className="alt-card">
+        <h3>Prefer to run it yourself? It works today.</h3>
+        <p className="small">
+          The whole pipe runs on your own accounts — free, unlimited, forever.
+          No server of ours sits in the path, so there is nothing of ours to
+          trust. You need a domain on Cloudflare (about $10 a year), a GitHub
+          account, and about fifteen minutes with Claude Code.
+        </p>
+        <a className="btn ghost sm" href="https://github.com/jaal/dearkarl">
+          Self-host it free →
+        </a>
+      </div>
 
       <section className="lp-sec" id="faq">
         <h2>

@@ -44,6 +44,7 @@ class UsersDB {
   async deleteAccount(email: string): Promise<void> {
     await this.db.batch([
       this.db.prepare(`DELETE FROM api_tokens WHERE email = ?`).bind(email),
+      this.db.prepare(`DELETE FROM login_codes WHERE email = ?`).bind(email),
       this.db.prepare(`DELETE FROM users WHERE email = ?`).bind(email),
     ]);
   }
@@ -149,18 +150,19 @@ class UsersDB {
       .run();
   }
 
+  /** Ends the browser session only. Karl keeps its Drive access, so mail
+      keeps being saved while the user is logged out. */
   async logout(email: string): Promise<void> {
     await this.db
-      .prepare(
-        `UPDATE users
-         SET access_token = null,
-             access_expires = null,
-             refresh_token = null,
-             refresh_expires = null,
-             session_id = null
-         WHERE email = ?`,
-      )
+      .prepare(`UPDATE users SET session_id = null WHERE email = ?`)
       .bind(email)
+      .run();
+  }
+
+  async setSession(email: string, sessionId: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET session_id = ? WHERE email = ?`)
+      .bind(sessionId, email)
       .run();
   }
 }

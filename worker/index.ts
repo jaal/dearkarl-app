@@ -6,6 +6,7 @@ import { MCP_PATH } from "../shared/api";
 import { diagErrorSubject } from "./api/messages";
 import { mcpHandler } from "./mcp/handler";
 import { handleStub, installStubForEmail } from "./dev/stub";
+import { emailLoginHandler, isEmailLoginPath } from "./api/emailLogin";
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
@@ -20,8 +21,12 @@ export default {
       });
 
     try {
-      if (new URL(request.url).pathname === MCP_PATH) {
+      const url = new URL(request.url);
+      if (url.pathname === MCP_PATH) {
         return mcpHandler(request, env, ctx);
+      }
+      if (isEmailLoginPath(url)) {
+        return await emailLoginHandler(request, env);
       }
       return loginHandler(request, secret, env.DB);
     } catch (error) {

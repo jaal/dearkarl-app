@@ -30,8 +30,8 @@ export default function Base(props: BaseProps): React.JSX.Element {
             <span className="brandbar-r">
               {props.badge && <span className="badge">{props.badge}</span>}
               {/* Plain links, not <Link>: /app is the account app, which
-                  reads the URL once on load. Sign-up and log-in are the same
-                  Google flow; the app tells new and returning users apart. */}
+                  reads the URL once on load. Register is the Google sign-up
+                  at /app; Log in is the emailed-code page at /login. */}
               {props.authNav !== false && (
               <nav className="authnav" aria-label="Account">
                 {signedIn ? (
@@ -40,7 +40,7 @@ export default function Base(props: BaseProps): React.JSX.Element {
                   <>
                     <a href="/app">Register</a>
                     <span aria-hidden="true"> / </span>
-                    <a href="/app">Log in</a>
+                    <a href="/login">Log in</a>
                   </>
                 )}
               </nav>

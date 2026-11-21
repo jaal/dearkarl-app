@@ -23,7 +23,12 @@ import { tokenHandler } from "./tokens";
 import { addressHandler } from "./address";
 
 /** Session cookie lifetime when Google does not bound it: 30 days. */
-const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
+export const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
+
+export const sessionCookie = (sid: string, maxAge: number) =>
+  `sid=${sid}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+
+export const CLEAR_SID_COOKIE = sessionCookie("", 0);
 
 type AccessData = {
   access_token: string;
@@ -71,11 +76,18 @@ export async function loginHandler(
     const usersDb = new UsersDB(db);
     const user = await usersDb.getUserBySid(sid);
     if (!user) return new ErrorResponse(ApiErrors.LogoutNoUser);
-    if (!user.refresh_token)
-      return new ErrorResponse(ApiErrors.LogoutInvalidToken);
 
-    await client.revokeGoogleToken(user.refresh_token);
+    // Logging out ends this browser's session only. Karl's Drive access is
+    // left alone, so mail keeps landing in the folder; revoking it is what
+    // deleting the account does.
     await usersDb.logout(user.email);
+    return new Response(JSON.stringify({ loggedOut: true }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": CLEAR_SID_COOKIE,
+      },
+    });
   }
   if (isLoginRequest(url)) {
     const payload: LoginUrl = {
@@ -150,7 +162,7 @@ export async function loginHandler(
     return new Response(JSON.stringify(responsePayload), {
       status: 200,
       headers: {
-        "Set-Cookie": `sid=${userRow.session_id}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${cookieMaxAge}`,
+        "Set-Cookie": sessionCookie(userRow.session_id!, cookieMaxAge),
       },
     });
   }

@@ -145,3 +145,37 @@ export const changeAddressName = async (
   }
   return { error: "Could not change the address. Try again." };
 };
+
+/** Asks for a sign-in code by email. True when the server took the request
+    (it answers the same whether or not the account exists). */
+export const requestLoginCode = async (email: string): Promise<boolean> => {
+  try {
+    const response = await fetch(ApiPaths.loginEmail, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+/** Trades the mailed code for a session. "ok", "invalid" (wrong or expired
+    code), or "offline" (the request itself failed). */
+export const verifyLoginCode = async (
+  email: string,
+  code: string,
+): Promise<"ok" | "invalid" | "offline"> => {
+  try {
+    const response = await fetch(ApiPaths.loginVerify, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code }),
+    });
+    if (response.ok) return "ok";
+    return response.status === 400 ? "invalid" : "offline";
+  } catch {
+    return "offline";
+  }
+};

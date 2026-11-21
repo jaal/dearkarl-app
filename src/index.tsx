@@ -13,6 +13,7 @@ import BlogPost from "./marketing/BlogPost.tsx";
 import Privacy from "./marketing/Privacy.tsx";
 import Terms from "./marketing/Terms.tsx";
 import NotFound from "./marketing/NotFound.tsx";
+import Login from "./Login.tsx";
 
 // The hosted signup/account flow (the current app) lives at /app. The marketing
 // site (ported from dearkarl.com) is the root. The OAuth callback returns to
@@ -44,6 +45,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/app" element={<AppShell />} />
           {/* Linked from the "Please sign in to DearKarl again" mail. */}
           <Route path="/app/reconnect" element={<AppShell reconnect />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/blog" element={<BlogIndex />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/privacy" element={<Privacy />} />

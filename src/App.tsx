@@ -336,7 +336,8 @@ function App(props: {
               <p className="lede">
                 One approval covers everything. Karl uses it to write mail into a
                 folder he makes in your Drive, and to read that folder back to
-                Claude. There is no second login.
+                Claude. Later you can log in with Google or with a code we email
+                you.
               </p>
 
               <ul className="fence">
@@ -401,14 +402,10 @@ function App(props: {
                 only the files it created. You can cut this off from your Google
                 account, or from your account page, at any time.
               </p>
-
-              <div className="later-note">
-                <b>More ways to sign in, later.</b> Apple, and email with a
-                password. Google is the only one at launch because the Drive
-                folder needs a Google account anyway — a second sign-in method
-                would be a second account to reconcile with the same Drive.
-              </div>
             </div>
+            <p className="switch-auth">
+              Already have an account? <a href="/login">Log in</a>
+            </p>
             </>
           )
         ) : stage === "destination" ? (

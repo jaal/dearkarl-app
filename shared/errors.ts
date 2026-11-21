@@ -12,6 +12,11 @@ export interface ApiError {
 }
 
 export const ApiErrors = {
+  LoginCodeInvalid: {
+    status: 400,
+    code: "LOGIN_CODE_INVALID",
+    msg: "That code is wrong or has expired",
+  },
   NoSid: {
     status: 401,
     code: "NO_SID",

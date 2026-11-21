@@ -47,7 +47,7 @@ describe("marketing pages", () => {
     expect(container.textContent).toMatch(/claude mcp add/);
   });
 
-  it("shows Register / Log in in the top bar, both to the account app", () => {
+  it("shows Register (Google sign-up) and Log in (emailed code) in the top bar", () => {
     render(
       <MemoryRouter>
         <Home />
@@ -56,7 +56,7 @@ describe("marketing pages", () => {
     const nav = screen.getByRole("navigation", { name: "Account" });
     const links = [...nav.querySelectorAll("a")];
     expect(links.map((a) => a.textContent)).toEqual(["Register", "Log in"]);
-    expect(links.every((a) => a.getAttribute("href") === "/app")).toBe(true);
+    expect(links.map((a) => a.getAttribute("href"))).toEqual(["/app", "/login"]);
   });
 
   it("shows My account instead of Register / Log in when signed in", async () => {
@@ -72,7 +72,7 @@ describe("marketing pages", () => {
     const nav = screen.getByRole("navigation", { name: "Account" });
     await waitFor(() => expect(nav.textContent).toBe("My account"));
     expect(nav.querySelector("a")?.getAttribute("href")).toBe("/app");
-    expect(screen.getAllByText("Go to my account").length).toBe(2);
+    expect(screen.getAllByText("Go to my account").length).toBe(1);
     expect(fetchMock).toHaveBeenCalledOnce();
     fetchMock.mockRestore();
     resetSignedIn();

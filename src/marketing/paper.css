@@ -78,7 +78,7 @@
 .dk .lede { color: var(--muted); font-size: 1.14rem; line-height: 1.55; letter-spacing: -.01em; }
 .dk .small { font-size: .85rem; color: var(--muted); }
 /* labels: Jost, lowercase, spaced out — like the axis labels on a printed menu */
-.dk :is(.eyebrow, .badge, .flag-pill, .later, .rowitem .k) {
+.dk :is(.eyebrow, .badge, .later, .rowitem .k) {
   font-family: var(--head); text-transform: lowercase; letter-spacing: .16em; font-weight: 400;
 }
 .dk .eyebrow { font-size: .8rem; color: var(--muted); margin: 0 0 1.5em; }
@@ -150,7 +150,11 @@
 .dk .field:hover { border-color: var(--muted); }
 .dk .field:focus-visible { border-color: var(--ink); outline-offset: 0; }
 
-/* the waiting-list form: one field and its button on one line, wrapping on phones */
+/* /login and /app: a labelled field, and the link to the other action */
+.dk .login-label { display: block; margin: 20px 0 16px; }
+.dk .login-label > span { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 6px; }
+.dk .switch-auth { margin: 28px 0 0; font-size: .95rem; color: var(--muted); }
+.dk .switch-auth a { color: var(--ink); }
 
 /* text the reader copies: one click selects the whole line, no script */
 .dk .mono {
@@ -245,26 +249,9 @@
 .dk .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 26px; }
 .dk .hero-cta .cta-note { margin: 0; }
 
-/* the main option carries the weight: a solid ink edge against the
-   secondary option's hairline. Without hue, edge weight is the whole signal. */
-.dk .lead-card { margin-top: 44px; border: 1px solid var(--ink); padding: 36px; position: relative; }
-.dk .flag-pill {
-  position: absolute; top: -12px; left: 28px;
-  background: var(--ink); color: var(--on-ink);
-  font-size: .66rem; padding: 5px 12px;
-}
-.dk .lead-card h2 { font-size: 1.75rem; margin: 8px 0 .4em; letter-spacing: -.03em; }
-.dk .alt-card { margin-top: -1px; border: 1px solid var(--line); padding: 30px 36px; }
+/* self-hosting, under "How it works": a hairline box, secondary to the hero CTA */
+.dk .alt-card { margin-top: 40px; border: 1px solid var(--line); padding: 30px 36px; }
 .dk .alt-card h3 { font-size: 1.12rem; margin-bottom: .3em; }
-
-.dk .prereq { list-style: none; margin: 0 0 20px; padding: 0; font-size: .95rem; }
-.dk .prereq li { position: relative; padding-left: 1.6rem; color: var(--muted); }
-.dk .prereq li + li { margin-top: .5rem; }
-.dk .prereq li::before { content: "→"; position: absolute; left: 0; color: var(--ink); }
-.dk .prereq b { color: var(--ink); font-weight: 650; }
-.dk ol.prereq { counter-reset: step; }
-.dk ol.prereq li { counter-increment: step; }
-.dk ol.prereq li::before { content: counter(step) "."; font-family: var(--head); }
 .dk .cta-note { font-size: .86rem; color: var(--muted); margin: 14px 0 0; }
 .dk a.cta-note, .dk .cta-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
 .dk a.cta-note:hover, .dk .cta-note a:hover { color: var(--ink); }
@@ -378,11 +365,7 @@
   .dk .hero h1 { font-size: 2.2rem; }
   .dk .hero .lede { font-size: 1rem; }
   .dk .hero-cta { margin-top: 18px; }
-  .dk .lead-card { margin-top: 28px; padding: 24px 18px 20px; }
-  .dk .lead-card h2 { font-size: 1.3rem; }
   .dk .alt-card { padding: 20px 18px; }
-  .dk .prereq { margin-bottom: 16px; font-size: .9rem; }
-  .dk .prereq li + li { margin-top: .35rem; }
   .dk .rowitem { padding: 11px 2px; }
   .dk .btn,   .dk .btnrow .btn { width: auto; flex: 1 1 0; }
 }

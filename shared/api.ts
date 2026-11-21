@@ -19,7 +19,38 @@ export const ApiPaths = {
   address: api("address"),
   accountDelete: api("account/delete"),
   session: api("session"),
+  loginEmail: api("login/email"),
+  loginVerify: api("login/verify"),
 } as const;
+
+/** `POST /api/login/email`: mail a sign-in code to this address. */
+export interface LoginCodeRequest {
+  email: string;
+}
+
+/** `POST /api/login/verify`: trade the mailed code for a session. */
+export interface LoginCodeVerify {
+  email: string;
+  code: string;
+}
+
+export interface LoginCodeVerified {
+  loggedIn: true;
+}
+
+export function isLoginCodeRequest(value: unknown): value is LoginCodeRequest {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as LoginCodeRequest).email === "string"
+  );
+}
+
+export function isLoginCodeVerify(value: unknown): value is LoginCodeVerify {
+  return (
+    isLoginCodeRequest(value) && typeof (value as LoginCodeVerify).code === "string"
+  );
+}
 
 export function isLoginRequest(url: URL) {
   return url.pathname === ApiPaths.login;
