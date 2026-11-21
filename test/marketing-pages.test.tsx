@@ -14,7 +14,7 @@ import { resetSignedIn } from "../src/marketing/useSignedIn";
 afterEach(cleanup);
 
 describe("marketing pages", () => {
-  it("renders the home hero and waitlist", () => {
+  it("renders the home hero, with no waiting list", () => {
     render(
       <MemoryRouter>
         <Home />
@@ -24,7 +24,7 @@ describe("marketing pages", () => {
       screen.getByText(/Your AI never sees your mailbox/i),
     ).toBeTruthy();
     expect(screen.getByText(/How it works/i)).toBeTruthy();
-    expect(screen.getAllByText(/Join the waiting list/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/waiting list/i)).toBeNull();
   });
 
   it("puts the primary CTA in the hero and links privacy doubts to the FAQ", () => {

@@ -1,6 +1,5 @@
 import React from "react";
 import Base from "./Base";
-import Waitlist from "./Waitlist";
 import usePageMeta from "./usePageMeta";
 import useSignedIn from "./useSignedIn";
 import { SITE, refs, plain } from "./site";
@@ -11,8 +10,9 @@ const FAQ = [
   {
     q: "What is dearkarl?",
     a: `<p>${SITE.description}</p>
-        <p>It is open source and you can run it yourself today, free, on your own Cloudflare
-        account. A hosted version is opening soon.</p>`,
+        <p>We can run it for you: sign in with Google and you get your own address in a
+        minute, free while it is new. It is also open source, so you can run it yourself on
+        your own Cloudflare account.</p>`,
   },
   {
     q: "Isn't this just the Gmail connector?",
@@ -34,27 +34,30 @@ const FAQ = [
         message, turns it into a text file, and writes it straight into the folder it made for
         you — holding it in memory for a few seconds on the way and never writing it to a disk
         of ours.</p>
-        <p>If your Drive is unreachable the message bounces back to the sender rather than
-        sitting in a queue on our side. There is no queue: that is the trade for us keeping
-        nothing.</p>`,
+        <p>If Karl cannot write to your Drive, he tells you by email instead of keeping the
+        message. There is no queue on our side: that is the trade for us keeping nothing.</p>`,
   },
   {
     q: "What happens if I leave?",
     a: `<p>You keep everything. The notes are plain text files in your own Drive — no format
         of ours, no account of ours needed to read them. Turn off forwarding and it stops;
-        nothing reaches back into what was already written.</p>`,
+        nothing reaches back into what was already written.</p>
+        <p>You can also delete your account from your account page. Your address stops
+        working, Karl loses access to your Drive, and we remove what we hold. The files stay
+        in your Drive.</p>`,
   },
   {
     q: "Does this page track me?",
-    a: `<p>No. It runs no JavaScript, sets no cookies, and loads nothing from anyone else —
-        not even its fonts. You can check: view the source, or read the
-        <code>Content-Security-Policy</code> header, which forbids scripts outright.</p>`,
+    a: `<p>No. There are no analytics, no tracking or ad cookies, and nothing loads from
+        anyone else — not even the fonts. The only cookie is the one that keeps you signed in,
+        and it exists only after you sign in.</p>`,
   },
   {
     q: 'Why "Karl"?',
     a: `<p>Because it tells you how to use it: <em>just email it to Karl.</em></p>
-        <p>Karl is the mailman. He always delivers — and he never reads your post, never
-        keeps a copy, and never writes back.</p>
+        <p>Karl is the mailman. He always delivers — and he never reads your post and never
+        keeps a copy. The only mail he writes is short notes: to you, that a message is saved,
+        and to a stranger, that your address is not theirs to write to.</p>
         <p>That is not a personality we gave him. It is the architecture.</p>`,
   },
 ];
@@ -261,19 +264,6 @@ export default function Home(): React.JSX.Element {
         </div>
       </section>
 
-      <section className="lp-sec" id="waitlist">
-        <h2>
-          <span className="g" aria-hidden="true">
-            ✉
-          </span>
-          Join the waiting list
-        </h2>
-        <p className="lede">
-          Get told when the hosted version opens. No other mail, and the list is
-          not shared with anyone.
-        </p>
-        <Waitlist id="email-bottom" label="Join" />
-      </section>
     </Base>
   );
 }

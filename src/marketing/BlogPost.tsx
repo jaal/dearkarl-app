@@ -1,7 +1,6 @@
 import React from "react";
 import { Link, useParams } from "react-router-dom";
 import Base from "./Base";
-import Waitlist from "./Waitlist";
 import Markdown from "./Markdown";
 import usePageMeta from "./usePageMeta";
 import { getPost, postUrl, isoDate, longDate } from "./posts";
@@ -125,9 +124,11 @@ export default function BlogPost(): React.JSX.Element {
           <h2>Try dearkarl</h2>
           <p>
             Forward an email, and your next Claude Code session opens knowing it arrived. The
-            self-hosted version is free and works today; the hosted one is opening soon.
+            hosted version takes a minute: sign in with Google and you get your own address.
           </p>
-          <Waitlist id="email-post" />
+          <a className="btn" href="/app">
+            Get your address
+          </a>
           <p className="cta-note">
             Or <a href={SITE.repo}>self-host it from GitHub</a>.
           </p>

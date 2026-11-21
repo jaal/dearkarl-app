@@ -143,9 +143,6 @@
 .dk .field:focus-visible { border-color: var(--ink); outline-offset: 0; }
 
 /* the waiting-list form: one field and its button on one line, wrapping on phones */
-.dk .signup { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
-.dk .signup .field { flex: 1 1 15rem; width: auto; border-radius: 999px; padding: 12px 20px; }
-.dk .signup .btn { flex: 0 0 auto; width: auto; }
 
 /* text the reader copies: one click selects the whole line, no script */
 .dk .mono {
@@ -368,6 +365,5 @@
   .dk .prereq { margin-bottom: 16px; font-size: .9rem; }
   .dk .prereq li + li { margin-top: .35rem; }
   .dk .rowitem { padding: 11px 2px; }
-  .dk .btn, .dk .signup .btn { width: 100%; }
-  .dk .btnrow .btn { width: auto; flex: 1 1 0; }
+  .dk .btn,   .dk .btnrow .btn { width: auto; flex: 1 1 0; }
 }
