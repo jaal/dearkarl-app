@@ -1,17 +1,21 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "karl",
+  "name": "dearkarl-app",
   "main": "worker/index.ts",
   "compatibility_date": "2026-08-01",
   "upload_source_maps": true,
   "assets": {
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/mcp"]
+    "run_worker_first": [
+      "/api/*",
+      "/mcp"
+    ]
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "karl"
+      "database_name": "dearkarl",
+      "database_id": "dde422e9-5d0e-4e50-967c-89d4b45c6fe7"
     }
   ],
   "observability": {
