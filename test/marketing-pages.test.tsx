@@ -21,7 +21,10 @@ describe("marketing pages", () => {
       </MemoryRouter>,
     );
     expect(
-      screen.getByText(/Your AI never sees your mailbox/i),
+      screen.getByRole("heading", { level: 1, name: "Email anything to your AI." }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/Your AI never sees your mailbox\. Only what you send it\./i),
     ).toBeTruthy();
     expect(screen.getByText(/How it works/i)).toBeTruthy();
     expect(screen.queryByText(/waiting list/i)).toBeNull();

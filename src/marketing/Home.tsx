@@ -141,10 +141,11 @@ export default function Home(): React.JSX.Element {
       description="Forward an email to your own secret address, and your next Claude session opens knowing it arrived. Your AI never sees your mailbox."
     >
       <div className="hero">
-        <h1>Your AI never sees your mailbox. Only what you send it.</h1>
+        <h1>Email anything to your AI.</h1>
         <p className="lede">
-          Email anything to your AI. Forward an article, a note you dictated, a
-          receipt — and your next Claude session opens knowing it arrived.
+          Forward an article, a note you dictated, a receipt — and your next
+          Claude session opens knowing it arrived. Your AI never sees your
+          mailbox. Only what you send it.
         </p>
         <div className="hero-cta">
           <a className="btn" href="/app">
