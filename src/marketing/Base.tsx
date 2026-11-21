@@ -48,9 +48,8 @@ export default function Base(props: BaseProps): React.JSX.Element {
           </p>
           <nav aria-label="Footer">
             <Link to="/blog">Blog</Link>
-            <Link to="/privacy">Privacy notice</Link>
-            <Link to="/terms">Terms of use</Link>
-            <a href="/privacy#1-who-runs-this-site">Imprint</a>
+            <Link to="/privacy">Privacy · Prywatność</Link>
+            <Link to="/terms">Terms · Regulamin</Link>
             <a href={SITE.repo}>Source on GitHub</a>
             <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a>
           </nav>

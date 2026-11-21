@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import App from "./App.tsx";
 import { AppProvider } from "./context/AppContext.tsx";
 import "./mvp2.css";
@@ -48,6 +48,8 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/polityka-prywatnosci" element={<Navigate to="/privacy#pl" replace />} />
+          <Route path="/regulamin" element={<Navigate to="/terms#pl" replace />} />
           <Route path="/" element={<Home />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

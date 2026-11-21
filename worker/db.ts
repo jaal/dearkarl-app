@@ -288,11 +288,19 @@ export const UNKNOWN_SENDER_NOTICE_WINDOW_MS = 24 * 60 * 60 * 1000;
  * (and records the send) if none went out in the last 24 h. A single UPSERT,
  * so two mails arriving at once cannot both win.
  */
+/** How long a stranger's address is kept after Karl last answered it. */
+export const UNKNOWN_SENDER_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
 export async function claimUnknownSenderNotice(
   db: D1Database,
   address: string,
   now: number,
 ): Promise<boolean> {
+  // The privacy policy promises these rows live at most 30 days.
+  await db
+    .prepare(`DELETE FROM unknown_sender_notices WHERE last_sent < ?`)
+    .bind(now - UNKNOWN_SENDER_RETENTION_MS)
+    .run();
   const row = await db
     .prepare(
       `INSERT INTO unknown_sender_notices (address, last_sent)

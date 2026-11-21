@@ -1,18 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Base from "./Base";
 import Markdown from "./Markdown";
 import usePageMeta from "./usePageMeta";
 
-// A legal document page (privacy, terms). The body is markdown. The Astro
-// Legal.astro layout built a table of contents from the level-2 headings; here
-// we render the markdown directly and let the page's own structure stand, since
-// the documents already contain their own heading anchors.
+// A bilingual legal document page (privacy, terms): Polish on top (#pl),
+// English below (#en). Mail links point at those anchors.
+
+interface LegalVersion {
+  title: string;
+  body: string;
+}
 
 interface LegalDocProps {
-  title: string;
   description: string;
   metaTitle: string;
-  body: string;
+  pl: LegalVersion;
+  en: LegalVersion;
 }
 
 export default function LegalDoc(props: LegalDocProps): React.JSX.Element {
@@ -21,11 +25,28 @@ export default function LegalDoc(props: LegalDocProps): React.JSX.Element {
     description: props.description,
   });
 
+  // React Router does not scroll to a hash on its own.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (!hash) return;
+    document.getElementById(hash.slice(1))?.scrollIntoView();
+  }, [hash]);
+
   return (
     <Base title={props.metaTitle} description={props.description}>
       <article className="doc">
-        <h1>{props.title}</h1>
-        <Markdown>{props.body}</Markdown>
+        <p className="langs">
+          <a href="#pl">Polski</a> · <a href="#en">English</a>
+        </p>
+        <section id="pl" lang="pl">
+          <h1>{props.pl.title}</h1>
+          <Markdown>{props.pl.body}</Markdown>
+        </section>
+        <hr />
+        <section id="en" lang="en">
+          <h1>{props.en.title}</h1>
+          <Markdown>{props.en.body}</Markdown>
+        </section>
       </article>
     </Base>
   );

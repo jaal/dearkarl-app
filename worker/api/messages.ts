@@ -23,11 +23,11 @@ const SITE = SITE_ORIGIN;
 const CONTACT = SUPPORT_EMAIL;
 /** The app page that renews Karl's Google access (src/Reconnect.tsx). */
 const RECONNECT = `${SITE}/app/reconnect`;
-/** Mail is English-only; the legal pages exist in both languages, so link both. */
-const PRIVACY_EN = `${SITE}/privacy`;
-const PRIVACY_PL = `${SITE}/polityka-prywatnosci`;
-const TERMS_EN = `${SITE}/terms`;
-const TERMS_PL = `${SITE}/regulamin`;
+/** Mail is English-only; each legal page holds both languages (#pl on top, #en below). */
+const PRIVACY_EN = `${SITE}/privacy#en`;
+const PRIVACY_PL = `${SITE}/privacy#pl`;
+const TERMS_EN = `${SITE}/terms#en`;
+const TERMS_PL = `${SITE}/terms#pl`;
 
 const FONT = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 

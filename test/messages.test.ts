@@ -46,10 +46,10 @@ describe("mail copy", () => {
   it("links both language versions of the privacy policy and terms", () => {
     for (const m of all()) {
       const hrefs = links(m.html).map((l) => l.href);
-      expect(hrefs).toContain("https://dearkarl.com/privacy");
-      expect(hrefs).toContain("https://dearkarl.com/polityka-prywatnosci");
-      expect(hrefs).toContain("https://dearkarl.com/terms");
-      expect(hrefs).toContain("https://dearkarl.com/regulamin");
+      expect(hrefs).toContain("https://dearkarl.com/privacy#en");
+      expect(hrefs).toContain("https://dearkarl.com/privacy#pl");
+      expect(hrefs).toContain("https://dearkarl.com/terms#en");
+      expect(hrefs).toContain("https://dearkarl.com/terms#pl");
     }
   });
 

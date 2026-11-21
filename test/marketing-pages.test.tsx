@@ -82,14 +82,14 @@ describe("marketing pages", () => {
         <Privacy />
       </MemoryRouter>,
     );
-    expect(screen.getAllByText(/Privacy notice & imprint/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Polityka prywatności/i).length).toBeGreaterThan(0);
 
     render(
       <MemoryRouter>
         <Terms />
       </MemoryRouter>,
     );
-    expect(screen.getAllByText(/Terms of use/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Regulamin/i).length).toBeGreaterThan(0);
   });
 
   it("renders the not-found page", () => {

@@ -301,6 +301,9 @@
 .dk .doc th { font-family: var(--head); font-weight: 500; }
 .dk .doc blockquote { margin: 0 0 1em; border-left: 2px solid var(--ink); padding: 2px 0 2px 18px; color: var(--muted); }
 .dk .doc hr { border: 0; border-top: 1px solid var(--line); margin: 36px 0; }
+.dk .doc .langs { font-family: var(--head); font-size: .85rem; color: var(--muted); margin: 0 0 8px; }
+.dk .doc section > h1 { scroll-margin-top: 20px; }
+.dk .doc hr { margin: 64px 0; }
 .dk .toc { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 16px 0; margin: 0 0 12px; font-size: .9rem; }
 .dk mark.todo { background: var(--ink); color: var(--on-ink); padding: 0 .3em; }
 
