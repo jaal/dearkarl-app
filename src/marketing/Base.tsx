@@ -58,7 +58,8 @@ export default function Base(props: BaseProps): React.JSX.Element {
             Run by <b>{OPERATOR.legalName}</b>, Wrocław, Poland.
             <br />Self-hosting is free and always will be.
             <br />© 2026 DearKarl - Email anything to your AI privately. All
-            rights reserved. Made with ❤️ in Wrocław &amp; Zagościniec, Poland 🇵🇱
+            rights reserved.
+            <br />Made with ❤️ in Wrocław &amp; Zagościniec, Poland 🇵🇱
           </p>
           <nav aria-label="Footer">
             <Link to="/blog">Blog</Link>
