@@ -1,29 +1,100 @@
 import React, { useEffect, useState } from "react";
 import style from "./App.module.css";
-import { getActiveSession, getLoginUrl, logout, requestToken } from "./server";
+import {
+  deleteAccount,
+  DRIVE_ACCESS_LOST,
+  getActiveSession,
+  getLoginUrl,
+  logout,
+  requestToken,
+  DRIVE_SCOPE_MISSING,
+} from "./server";
 import Account from "./Account";
 import Address from "./Address";
 import Connect from "./Connect";
 import Destination from "./Destination";
 import SignInRefused from "./SignInRefused";
+import Reconnect from "./Reconnect";
+import Base from "./marketing/Base";
+import usePageMeta from "./marketing/usePageMeta";
 
 function navigateTo(url: string) {
   window.location.href = url;
 }
 
-// Remembers, for this browser session, whether the user has already been
-// through the onboarding steps. A fresh sign-in starts at the destination
-// choice; a returning reload skips straight to the account page.
+// Where a signed-in user lands. Onboarding (destination → address → connect)
+// runs only right after the sign-in that created the account; everyone else —
+// a returning user, a new tab, a reconnect — goes straight to the account page.
 const STAGE_KEY = "dk_flow_stage";
+// Set (to a timestamp) when the user starts a reconnect from /app/reconnect.
+// If they abandon Google's consent screen it would linger, so it only counts
+// when Google sends them back within RECONNECT_TTL_MS.
+const RECONNECT_KEY = "dk_reconnecting";
+const RECONNECT_TTL_MS = 15 * 60 * 1000;
+// One-shot flags set by the OAuth callback and read by the page it lands on.
+const RECONNECTED_KEY = "dk_reconnected";
+const SIGNIN_FAILED_KEY = "dk_signin_failed";
+const DRIVE_MISSING_KEY = "dk_drive_missing";
+const ACCOUNT_DELETED_KEY = "dk_account_deleted";
+
+const PAGE_TITLE = "Your account — dearkarl";
+const PAGE_DESCRIPTION =
+  "Sign in with Google, get your Karl address, and connect Claude Code.";
+
+const SIGNIN_FAILED_MESSAGE =
+  "Google sign-in didn't go through. Please try again.";
+const DRIVE_MISSING_MESSAGE =
+  "Google didn't give Karl access to your Drive folder. Try again and tick the Drive box on Google's screen.";
 
 type Stage = "destination" | "address" | "connect" | "account";
 
 function readStage(): Stage {
   try {
-    return sessionStorage.getItem(STAGE_KEY) === "account" ? "account" : "destination";
+    return sessionStorage.getItem(STAGE_KEY) === "destination" ? "destination" : "account";
   } catch {
-    return "destination";
+    return "account";
   }
+}
+
+function readSession(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(key: string, value: string | null) {
+  try {
+    if (value === null) sessionStorage.removeItem(key);
+    else sessionStorage.setItem(key, value);
+  } catch {
+    // Storage unavailable; the app still works for this page view.
+  }
+}
+
+/** Reads and clears a one-shot flag. */
+function takeFlag(key: string): boolean {
+  const v = readSession(key) === "1";
+  writeSession(key, null);
+  return v;
+}
+
+/** True if a reconnect was started recently; clears the marker either way. */
+function takePendingReconnect(): boolean {
+  const started = Number(readSession(RECONNECT_KEY));
+  writeSession(RECONNECT_KEY, null);
+  return started > 0 && Date.now() - started < RECONNECT_TTL_MS;
+}
+
+// OAuth codes this page has already started exchanging. React's StrictMode
+// runs effects twice in development, and a code is single-use: the second
+// exchange would fail (or race the first into a duplicate insert).
+const exchangedCodes = new Set<string>();
+
+/** For tests, which reuse codes across cases. */
+export function resetExchangedCodes(): void {
+  exchangedCodes.clear();
 }
 
 function CheckIcon() {
@@ -96,6 +167,9 @@ function App(props: {
   /** True when Google redirected back with an OAuth error, i.e. the user
       declined the consent (access_denied) rather than granting it. */
   refused?: boolean;
+  /** /app/reconnect: Karl lost access to the user's Drive and they came from
+      the "sign in again" mail to renew it. */
+  reconnect?: boolean;
 }): React.JSX.Element {
   const [activeSession, setActiveSession] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -105,19 +179,20 @@ function App(props: {
   const [error, setError] = useState("");
   const [newsletter, setNewsletter] = useState(false);
   const [stage, setStage] = useState<Stage>(readStage);
+  const [reconnected, setReconnected] = useState(false);
+  const [accountDeleted, setAccountDeleted] = useState(false);
+  const [driveMissing, setDriveMissing] = useState(false);
+  const [driveConnected, setDriveConnected] = useState(true);
 
   const goToAccount = () => {
     setStage("account");
-    try {
-      sessionStorage.setItem(STAGE_KEY, "account");
-    } catch {
-      // Storage unavailable; the stage still switches for this session.
-    }
+    writeSession(STAGE_KEY, "account");
   };
 
   const loginGoogle = async () => {
     setError("");
     setBusy(true);
+    writeSession(RECONNECT_KEY, props.reconnect ? String(Date.now()) : null);
 
     const loginUrl = await getLoginUrl();
     if (!loginUrl) {
@@ -131,12 +206,21 @@ function App(props: {
 
   const logoutGoogle = async () => {
     setBusy(true);
-    try {
-      sessionStorage.removeItem(STAGE_KEY);
-    } catch {
-      // Storage unavailable; nothing to clear.
-    }
+    writeSession(STAGE_KEY, null);
     await logout();
+    navigateTo("/app");
+  };
+
+  const deleteAccountGoogle = async () => {
+    setError("");
+    setBusy(true);
+    if (!(await deleteAccount())) {
+      setError("Could not delete your account. Please try again.");
+      setBusy(false);
+      return;
+    }
+    writeSession(STAGE_KEY, null);
+    writeSession(ACCOUNT_DELETED_KEY, "1");
     navigateTo("/app");
   };
 
@@ -145,31 +229,76 @@ function App(props: {
     setBusy(true);
 
     window.history.replaceState({}, "", "/app");
-    await requestToken(code);
+    const reconnecting = takePendingReconnect();
+    const profile = await requestToken(code);
+    if (profile === DRIVE_SCOPE_MISSING) {
+      // Signed in, but the Drive checkbox was left empty: no account was
+      // made (or the old tokens were kept), so ask for the consent again.
+      writeSession(DRIVE_MISSING_KEY, "1");
+      if (reconnecting) writeSession(RECONNECT_KEY, String(Date.now()));
+      setBusy(false);
+      navigateTo(reconnecting ? "/app/reconnect" : "/app");
+      return;
+    }
+    if (!profile) {
+      // The code exchange failed: say so on the page the user started from,
+      // instead of silently dropping them back on the sign-in screen.
+      writeSession(SIGNIN_FAILED_KEY, "1");
+      setBusy(false);
+      navigateTo(reconnecting ? "/app/reconnect" : "/app");
+      return;
+    }
+    // A brand-new account runs onboarding; an existing one (including a
+    // reconnect) goes to the account page.
+    writeSession(STAGE_KEY, profile.isNewUser ? "destination" : "account");
+    if (reconnecting) writeSession(RECONNECTED_KEY, "1");
     setBusy(false);
     navigateTo("/app");
   };
 
+  // No busy flag here: every page except /app/reconnect shows "Loading…"
+  // until this finishes, and the reconnect button must not look dead while
+  // the session check (only used to show the user's email) is in flight.
   const init = async () => {
-    setBusy(true);
+    if (takeFlag(SIGNIN_FAILED_KEY)) setError(SIGNIN_FAILED_MESSAGE);
+    // One-shot flags only ever switch a notice on: StrictMode runs this twice
+    // in development, and the second run finds them already taken.
+    if (takeFlag(ACCOUNT_DELETED_KEY)) setAccountDeleted(true);
+    if (takeFlag(DRIVE_MISSING_KEY)) {
+      if (props.reconnect) setError(DRIVE_MISSING_MESSAGE);
+      else setDriveMissing(true);
+    }
     const session = await getActiveSession();
+    if (session === DRIVE_ACCESS_LOST) {
+      // Signed in, but Karl can no longer reach their Drive: the only useful
+      // page is the reconnect one (which itself just shows the button).
+      if (!props.reconnect) {
+        window.location.replace("/app/reconnect");
+        return;
+      }
+      setActiveSession(false);
+      setLoading(false);
+      return;
+    }
     if (session) {
       setActiveSession(true);
       setUserEmail(session.userEmail);
       setKarlEmail(session.karlEmail);
+      setDriveConnected(session.driveConnected !== false);
+      if (takeFlag(RECONNECTED_KEY) && session.driveConnected !== false)
+        setReconnected(true);
     } else {
       setActiveSession(false);
       setUserEmail("");
       setKarlEmail("");
     }
-    setBusy(false);
     setLoading(false);
   };
 
   useEffect(() => {
-    setError("");
-
     if (props.code) {
+      if (exchangedCodes.has(props.code)) return;
+      exchangedCodes.add(props.code);
       initToken(props.code);
     } else {
       init();
@@ -177,25 +306,50 @@ function App(props: {
     return () => {};
   }, []);
 
-  return (
-    <>
-      <header className="site-head">
-        <a className="brand" href="/">
-          <span className="mark">📬</span> dearkarl
-        </a>
-        <span className="badge">
-          {activeSession ? "Signed in" : "Hosted · free while it's new"}
-        </span>
-      </header>
+  usePageMeta({ title: PAGE_TITLE, description: PAGE_DESCRIPTION });
 
-      <main>
-        {loading ? (
+  // Same frame as the marketing pages (brand bar, paper, footer), so the
+  // site and the app read as one place.
+  return (
+    <Base
+      title={PAGE_TITLE}
+      description={PAGE_DESCRIPTION}
+      authNav={false}
+      badge={activeSession ? "Signed in" : "Free while it's new"}
+    >
+      <div className="app">
+        {props.reconnect ? (
+          <Reconnect
+            userEmail={userEmail}
+            error={error}
+            busy={busy}
+            onReconnect={loginGoogle}
+          />
+        ) : loading ? (
           <p className="small">Loading…</p>
         ) : !activeSession ? (
-          props.refused ? (
-            <SignInRefused onRetry={() => navigateTo("/app")} />
+          props.refused || driveMissing ? (
+            <SignInRefused
+              driveUnticked={driveMissing && !props.refused}
+              onRetry={
+                driveMissing && !props.refused
+                  ? loginGoogle
+                  : () =>
+                      navigateTo(takePendingReconnect() ? "/app/reconnect" : "/app")
+              }
+            />
           ) : (
             <>
+              {accountDeleted && (
+                <div className="card narrow" role="status">
+                  <h1>Your account is deleted</h1>
+                  <p className="lede">
+                    Your Karl address no longer works and Karl no longer has
+                    access to your Drive. The dearkarl folder and its files are
+                    still in your Drive, and stay yours.
+                  </p>
+                </div>
+              )}
               <nav className="steps" aria-label="Progress">
                 <ol>
                   <li className="on">
@@ -221,7 +375,8 @@ function App(props: {
               <p className="lede">
                 One approval covers everything. Karl uses it to write mail into a
                 folder he makes in your Drive, and to read that folder back to
-                Claude. There is no second login.
+                Claude. Later you can log in with Google or with a code we email
+                you.
               </p>
 
               <ul className="fence">
@@ -286,14 +441,10 @@ function App(props: {
                 only the files it created. You can cut this off from your Google
                 account, or from your account page, at any time.
               </p>
-
-              <div className="later-note">
-                <b>More ways to sign in, later.</b> Apple, and email with a
-                password. Google is the only one at launch because the Drive
-                folder needs a Google account anyway — a second sign-in method
-                would be a second account to reconcile with the same Drive.
-              </div>
             </div>
+            <p className="switch-auth">
+              Already have an account? <a href="/login">Log in</a>
+            </p>
             </>
           )
         ) : stage === "destination" ? (
@@ -314,21 +465,18 @@ function App(props: {
           <Account
             karlEmail={karlEmail}
             userEmail={userEmail}
+            reconnected={reconnected}
+            driveConnected={driveConnected}
             error={error}
             busy={busy}
             onShowConnect={() => setStage("connect")}
             onLogout={logoutGoogle}
+            onDeleteAccount={deleteAccountGoogle}
+            onAddressChanged={setKarlEmail}
           />
         )}
-      </main>
-
-      <footer className="site-foot">
-        <span>Your mail lands in your Drive, not ours.</span>
-        <span>
-          <a href="/app">Sign in</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
-        </span>
-      </footer>
-    </>
+      </div>
+    </Base>
   );
 }
 

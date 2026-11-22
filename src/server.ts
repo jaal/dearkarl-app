@@ -4,21 +4,37 @@ import {
   type ApiTokenCreated,
   type ApiTokenSummary,
   type LoginUrl,
+  type ResponsePayloadProfile,
   isActiveSession,
   isApiTokenCreated,
   isApiTokensList,
   isLoginUrl,
+  isChangeAddressResponse,
+  isResponsePayloadError,
+  isResponsePayloadProfile,
 } from "../shared/api";
+import { ApiErrors } from "../shared/errors";
 
 // Re-exported so this module remains the frontend's API client surface.
 export type { ActiveSession, LoginUrl, ApiTokenCreated, ApiTokenSummary };
 export { isActiveSession, isLoginUrl };
 
-export const getActiveSession = async (): Promise<ActiveSession | null> => {
+/** Signed in, but Karl's Google access is gone (revoked or expired): the
+    user must reconnect Drive before mail can be saved again. */
+export const DRIVE_ACCESS_LOST = "drive-access-lost" as const;
+
+/** Google signed the user in but they left the Drive checkbox unticked. */
+export const DRIVE_SCOPE_MISSING = "drive-scope-missing" as const;
+
+export const getActiveSession = async (): Promise<
+  ActiveSession | typeof DRIVE_ACCESS_LOST | null
+> => {
   try {
     const response = await fetch(ApiPaths.active);
     if (!response.ok) {
-      console.info(await response.json());
+      const body = await response.json().catch(() => null);
+      if (isResponsePayloadError(body) && body.code === ApiErrors.InvalidToken.code)
+        return DRIVE_ACCESS_LOST;
       return null;
     }
     const result = await response.json();
@@ -49,7 +65,19 @@ export const logout = async () => {
   } catch {}
 };
 
-export const requestToken = async (code: string): Promise<LoginUrl | null> => {
+/** Deletes the signed-in user's account. True when it is gone. */
+export const deleteAccount = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(ApiPaths.accountDelete, { method: "POST" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+export const requestToken = async (
+  code: string,
+): Promise<ResponsePayloadProfile | typeof DRIVE_SCOPE_MISSING | null> => {
   try {
     const response = await fetch(ApiPaths.code, {
       method: "POST",
@@ -57,11 +85,13 @@ export const requestToken = async (code: string): Promise<LoginUrl | null> => {
       body: JSON.stringify({ code: code }),
     });
     if (!response.ok) {
-      console.info(await response.json());
+      const body = await response.json().catch(() => null);
+      if (isResponsePayloadError(body) && body.code === ApiErrors.DriveScopeMissing.code)
+        return DRIVE_SCOPE_MISSING;
       return null;
     }
     const result = await response.json();
-    return isLoginUrl(result) ? result : null;
+    return isResponsePayloadProfile(result) ? result : null;
   } catch {
     return null;
   }
@@ -106,5 +136,60 @@ export const revokeApiToken = async (id: number): Promise<boolean> => {
     return response.ok;
   } catch {
     return false;
+  }
+};
+
+/** Changes the readable part of the Karl address. Returns the new local part,
+    or the reason the server gave for refusing it. */
+export const changeAddressName = async (
+  name: string,
+): Promise<{ karlEmail: string } | { error: string }> => {
+  try {
+    const response = await fetch(ApiPaths.address, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    const result = await response.json();
+    if (response.ok && isChangeAddressResponse(result))
+      return { karlEmail: result.karlEmail };
+    if (isResponsePayloadError(result)) return { error: result.msg };
+  } catch {
+    // fall through
+  }
+  return { error: "Could not change the address. Try again." };
+};
+
+/** Asks for a sign-in code by email. True when the server took the request
+    (it answers the same whether or not the account exists). */
+export const requestLoginCode = async (email: string): Promise<boolean> => {
+  try {
+    const response = await fetch(ApiPaths.loginEmail, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+/** Trades the mailed code for a session. "ok", "invalid" (wrong or expired
+    code), or "offline" (the request itself failed). */
+export const verifyLoginCode = async (
+  email: string,
+  code: string,
+): Promise<"ok" | "invalid" | "offline"> => {
+  try {
+    const response = await fetch(ApiPaths.loginVerify, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code }),
+    });
+    if (response.ok) return "ok";
+    return response.status === 400 ? "invalid" : "offline";
+  } catch {
+    return "offline";
   }
 };

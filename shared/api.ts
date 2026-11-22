@@ -16,7 +16,41 @@ export const ApiPaths = {
   active: api("active"),
   tokens: api("tokens"),
   tokensRevoke: api("tokens/revoke"),
+  address: api("address"),
+  accountDelete: api("account/delete"),
+  session: api("session"),
+  loginEmail: api("login/email"),
+  loginVerify: api("login/verify"),
 } as const;
+
+/** `POST /api/login/email`: mail a sign-in code to this address. */
+export interface LoginCodeRequest {
+  email: string;
+}
+
+/** `POST /api/login/verify`: trade the mailed code for a session. */
+export interface LoginCodeVerify {
+  email: string;
+  code: string;
+}
+
+export interface LoginCodeVerified {
+  loggedIn: true;
+}
+
+export function isLoginCodeRequest(value: unknown): value is LoginCodeRequest {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as LoginCodeRequest).email === "string"
+  );
+}
+
+export function isLoginCodeVerify(value: unknown): value is LoginCodeVerify {
+  return (
+    isLoginCodeRequest(value) && typeof (value as LoginCodeVerify).code === "string"
+  );
+}
 
 export function isLoginRequest(url: URL) {
   return url.pathname === ApiPaths.login;
@@ -40,6 +74,32 @@ export function isTokensRequest(url: URL) {
 
 export function isTokensRevokeRequest(url: URL) {
   return url.pathname === ApiPaths.tokensRevoke;
+}
+
+export function isAddressRequest(url: URL) {
+  return url.pathname === ApiPaths.address;
+}
+
+export function isAccountDeleteRequest(url: URL) {
+  return url.pathname === ApiPaths.accountDelete;
+}
+
+export function isSessionRequest(url: URL) {
+  return url.pathname === ApiPaths.session;
+}
+
+/** Response of `GET /api/session`: is this browser signed in? Cheap: it only
+    looks the session cookie up, it never calls Google (unlike /api/active). */
+export interface SessionStatus {
+  signedIn: boolean;
+}
+
+export function isSessionStatus(value: unknown): value is SessionStatus {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as SessionStatus).signedIn === "boolean"
+  );
 }
 
 export function isMcpRequest(url: URL) {
@@ -126,10 +186,13 @@ export function isResponsePayloadLogin(
   );
 }
 
-type ResponsePayloadProfile = {
+export type ResponsePayloadProfile = {
   type: "PROFILE";
   email: string;
   login: string;
+  /** True when this sign-in created the account, so the app runs onboarding;
+      false for a returning user, who goes straight to their account page. */
+  isNewUser: boolean;
 };
 
 export function isResponsePayloadProfile(
@@ -168,6 +231,8 @@ export function isResponsePayloadActive(
 export interface ActiveSession {
   userEmail: string;
   karlEmail: string;
+  /** False when Karl can no longer save to their Drive. Absent = true. */
+  driveConnected?: boolean;
 }
 
 export function isActiveSession(value: unknown): value is ActiveSession {
@@ -264,4 +329,34 @@ export function isApiTokenCreated(value: unknown): value is ApiTokenCreated {
 
 export function isApiTokensList(value: unknown): value is ApiTokenSummary[] {
   return Array.isArray(value) && value.every(isApiTokenSummary);
+}
+
+/** Body of `POST /api/address`: the new readable part of the Karl address. */
+export type ChangeAddressRequest = {
+  name: string;
+};
+
+export function isChangeAddressRequest(
+  data: unknown,
+): data is ChangeAddressRequest {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    typeof (data as ChangeAddressRequest).name === "string"
+  );
+}
+
+/** Response of `POST /api/address`: the full local part now in use. */
+export interface ChangeAddressResponse {
+  karlEmail: string;
+}
+
+export function isChangeAddressResponse(
+  value: unknown,
+): value is ChangeAddressResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as ChangeAddressResponse).karlEmail === "string"
+  );
 }

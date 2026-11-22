@@ -1,3 +1,9 @@
+import {
+  DIAGNOSTIC_RECIPIENT,
+  DIAGNOSTIC_SENDER,
+  REPLY_TO,
+} from "../shared/urls";
+
 export interface Email {
   to: string;
   from?: string;
@@ -11,8 +17,8 @@ export interface ElasticEmailCredentials {
 }
 
 /** Fallback used when DIAGNOSTIC_EMAIL is not configured. */
-const DEFAULT_DIAGNOSTIC_RECIPIENT = "przemekkudla@hotmail.com";
-const DEFAULT_DIAGNOSTIC_SENDER = "diagnostic@przemekkudla.pl";
+const DEFAULT_DIAGNOSTIC_RECIPIENT = DIAGNOSTIC_RECIPIENT;
+const DEFAULT_DIAGNOSTIC_SENDER = DIAGNOSTIC_SENDER;
 
 /**
  * Escape text that will be interpolated into an HTML email body.
@@ -33,9 +39,13 @@ async function sendEmail(
   email: Email,
 ): Promise<void> {
   const body = {
-    Recipients: [{ Email: email.to }],
+    // Transactional sends take {To: [...]} and, unlike /v4/emails, do not
+    // append an "UNSUBSCRIBE" link — these are service mails, not marketing.
+    Recipients: { To: [email.to] },
     Content: {
       From: email.from ?? creds.username,
+      // Replies reach a person, not the sending-only subdomain.
+      ReplyTo: REPLY_TO,
       Subject: email.subject,
       Body: [
         {
@@ -44,9 +54,13 @@ async function sendEmail(
         },
       ],
     },
+    // No open pixel, no rewritten links: Elastic would otherwise record who
+    // opened Karl's mail and what they clicked. The privacy notice promises
+    // we don't track; this makes it true at the sender.
+    Options: { TrackOpens: false, TrackClicks: false },
   };
 
-  const res = await fetch("https://api.elasticemail.com/v4/emails", {
+  const res = await fetch("https://api.elasticemail.com/v4/emails/transactional", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -80,7 +94,8 @@ export async function sendDiagnosticEmail(
       text: escapeHtml(text),
     });
   } catch (e: any) {
-    console.error("DIAG EMAIL", e.message ?? e);
+    // Elastic's reply can echo the recipient; log only that it failed.
+    console.error("diagnostic mail failed:", (e?.message ?? "").match(/\d{3}/)?.[0] ?? "no status");
   }
 }
 

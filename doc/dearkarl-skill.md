@@ -12,7 +12,7 @@ anything.
 
 ## 1. Connect
 
-- **Endpoint:** `https://karl.przemekkudla.pl/mcp` (local dev: `http://localhost:5173/mcp`)
+- **Endpoint:** `https://dearkarl.com/mcp` (local dev: `http://localhost:5173/mcp`)
 - **Auth:** `Authorization: Bearer karl_<token>` header on every request
 - **Headers:** `Content-Type: application/json`, `Accept: application/json, text/event-stream`
 - **No sessions** — each request is independent; no session id to carry.
@@ -43,7 +43,7 @@ Returns the file's text, capped at 256 KB (the `truncated` flag says if it was c
 ## 4. Example (curl)
 
 ```bash
-URL=https://karl.przemekkudla.pl/mcp
+URL=https://dearkarl.com/mcp
 TOKEN="karl_<your token>"
 
 # handshake
@@ -69,7 +69,7 @@ curl -sS -X POST "$URL" -H "Authorization: Bearer $TOKEN" \
 | `HTTP 200` | JSON-RPC result; answer under `.result` | Read it |
 | `HTTP 401` | Missing, unknown, revoked, or expired token | Ask the user for a valid token |
 | `result.isError = true` | Tool-level failure; message in `content[0].text` | Read and report the message |
-| `"Drive re-authorization required"` | The user's Google access expired | Stop; tell the user to log in again at `karl.przemekkudla.pl`, then retry |
+| `"Drive re-authorization required"` | The user's Google access expired | Stop; tell the user to log in again at `dearkarl.com/app`, then retry |
 
 ## 6. Rules
 

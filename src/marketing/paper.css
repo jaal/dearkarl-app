@@ -32,6 +32,12 @@
   --measure: 61rem;
   color-scheme: light;
 
+  /* The account app (mvp2.css) renders inside this frame too; map its tokens
+     onto the paper so its cards, buttons and fields match the site. */
+  --panel: var(--bg);
+  --wash: var(--sunk);
+  --accent-ink: var(--on-ink);
+
   margin: 0;
   box-sizing: border-box;
   min-height: 100vh; display: flex; flex-direction: column;
@@ -72,7 +78,7 @@
 .dk .lede { color: var(--muted); font-size: 1.14rem; line-height: 1.55; letter-spacing: -.01em; }
 .dk .small { font-size: .85rem; color: var(--muted); }
 /* labels: Jost, lowercase, spaced out — like the axis labels on a printed menu */
-.dk :is(.eyebrow, .badge, .flag-pill, .later, .rowitem .k) {
+.dk :is(.eyebrow, .badge, .later, .rowitem .k) {
   font-family: var(--head); text-transform: lowercase; letter-spacing: .16em; font-weight: 400;
 }
 .dk .eyebrow { font-size: .8rem; color: var(--muted); margin: 0 0 1.5em; }
@@ -105,6 +111,14 @@
   font-weight: 500; letter-spacing: .02em; color: var(--ink); text-decoration: none;
 }
 .dk .brand:hover { text-decoration: none; }
+.dk .brandbar-r { display: inline-flex; align-items: center; gap: 14px; min-height: 44px; }
+.dk .authnav { font-family: var(--head); font-size: .9rem; color: var(--muted); white-space: nowrap; }
+.dk .authnav a {
+  color: var(--ink); text-decoration: none;
+  /* 44px touch target without changing how the text sits in the bar */
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px;
+}
+.dk .authnav a:hover { text-decoration: underline; }
 .dk .badge {
   font-size: .72rem; color: var(--muted);
   border: 1px solid var(--line); padding: 5px 10px;
@@ -123,6 +137,8 @@
 .dk .btn:active { background: var(--sunk); }
 .dk .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .dk .btn.ghost:hover { border-color: var(--ink); }
+.dk .btn:disabled { background: var(--line); border-color: var(--line); color: var(--muted); cursor: default; }
+.dk .btn svg { width: 17px; height: 17px; }
 .dk .btn.sm { padding: 9px 18px; font-size: .88rem; }
 .dk .btnrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 26px; }
 
@@ -134,10 +150,11 @@
 .dk .field:hover { border-color: var(--muted); }
 .dk .field:focus-visible { border-color: var(--ink); outline-offset: 0; }
 
-/* the waiting-list form: one field and its button on one line, wrapping on phones */
-.dk .signup { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
-.dk .signup .field { flex: 1 1 15rem; width: auto; border-radius: 999px; padding: 12px 20px; }
-.dk .signup .btn { flex: 0 0 auto; width: auto; }
+/* /login and /app: a labelled field, and the link to the other action */
+.dk .login-label { display: block; margin: 20px 0 16px; }
+.dk .login-label > span { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 6px; }
+.dk .switch-auth { margin: 28px 0 0; font-size: .95rem; color: var(--muted); }
+.dk .switch-auth a { color: var(--ink); }
 
 /* text the reader copies: one click selects the whole line, no script */
 .dk .mono {
@@ -215,29 +232,29 @@
 .dk .state.bad { color: var(--muted); }
 .dk .state.bad s { background: transparent; box-shadow: inset 0 0 0 1px var(--ink); }
 
+/* ── the account app (/app) inside the frame ────────────── */
+.dk .app { max-width: 46rem; }
+.dk .app .steps { font-family: var(--head); text-transform: lowercase; letter-spacing: .08em; margin-bottom: 36px; }
+.dk .app .card.narrow { max-width: 36rem; }
+.dk .app .steps .n { display: grid; place-items: center; }
+.dk .app :is(.card, .copybtn, .choice) { background: transparent; }
+.dk .app :is(input[type="text"], input[type="email"], select) { background: var(--bg); }
+
 /* ── landing ─────────────────────────────────────────────── */
 .dk .hero { padding: 8px 0 6px; max-width: 42rem; }
 .dk .hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.2rem); }
 .dk .hero .lede { font-size: 1.2rem; }
+/* The primary button sits in the hero so it is above the fold on every
+   screen; the lead card below repeats it after the details. */
+.dk .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 26px; }
+.dk .hero-cta .cta-note { margin: 0; }
 
-/* the main option carries the weight: a solid ink edge against the
-   secondary option's hairline. Without hue, edge weight is the whole signal. */
-.dk .lead-card { margin-top: 44px; border: 1px solid var(--ink); padding: 36px; position: relative; }
-.dk .flag-pill {
-  position: absolute; top: -12px; left: 28px;
-  background: var(--ink); color: var(--on-ink);
-  font-size: .66rem; padding: 5px 12px;
-}
-.dk .lead-card h2 { font-size: 1.75rem; margin: 8px 0 .4em; letter-spacing: -.03em; }
-.dk .alt-card { margin-top: -1px; border: 1px solid var(--line); padding: 30px 36px; }
+/* self-hosting, under "How it works": a hairline box, secondary to the hero CTA */
+.dk .alt-card { margin-top: 40px; border: 1px solid var(--line); padding: 30px 36px; }
 .dk .alt-card h3 { font-size: 1.12rem; margin-bottom: .3em; }
-
-.dk .prereq { list-style: none; margin: 0 0 20px; padding: 0; font-size: .95rem; }
-.dk .prereq li { position: relative; padding-left: 1.6rem; color: var(--muted); }
-.dk .prereq li + li { margin-top: .5rem; }
-.dk .prereq li::before { content: "→"; position: absolute; left: 0; color: var(--ink); }
-.dk .prereq b { color: var(--ink); font-weight: 650; }
 .dk .cta-note { font-size: .86rem; color: var(--muted); margin: 14px 0 0; }
+.dk a.cta-note, .dk .cta-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.dk a.cta-note:hover, .dk .cta-note a:hover { color: var(--ink); }
 
 .dk .lp-sec { margin-top: 64px; padding-top: 44px; border-top-width: 1px; }
 .dk .lp-sec > h2 { display: flex; align-items: center; gap: 12px; font-size: 1.5rem; letter-spacing: -.02em; margin: 0 0 .5em; }
@@ -287,6 +304,9 @@
 .dk .doc th { font-family: var(--head); font-weight: 500; }
 .dk .doc blockquote { margin: 0 0 1em; border-left: 2px solid var(--ink); padding: 2px 0 2px 18px; color: var(--muted); }
 .dk .doc hr { border: 0; border-top: 1px solid var(--line); margin: 36px 0; }
+.dk .doc .langs { font-family: var(--head); font-size: .85rem; color: var(--muted); margin: 0 0 8px; }
+.dk .doc section > h1 { scroll-margin-top: 20px; }
+.dk .doc hr { margin: 64px 0; }
 .dk .toc { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 16px 0; margin: 0 0 12px; font-size: .9rem; }
 .dk mark.todo { background: var(--ink); color: var(--on-ink); padding: 0 .3em; }
 
@@ -344,12 +364,39 @@
   .dk .hero { padding: 4px 0 2px; }
   .dk .hero h1 { font-size: 2.2rem; }
   .dk .hero .lede { font-size: 1rem; }
-  .dk .lead-card { margin-top: 28px; padding: 24px 18px 20px; }
-  .dk .lead-card h2 { font-size: 1.3rem; }
+  .dk .hero-cta { margin-top: 18px; }
   .dk .alt-card { padding: 20px 18px; }
-  .dk .prereq { margin-bottom: 16px; font-size: .9rem; }
-  .dk .prereq li + li { margin-top: .35rem; }
   .dk .rowitem { padding: 11px 2px; }
-  .dk .btn, .dk .signup .btn { width: 100%; }
-  .dk .btnrow .btn { width: auto; flex: 1 1 0; }
+  .dk .btn,   .dk .btnrow .btn { width: auto; flex: 1 1 0; }
 }
+
+/* a <button> that sits among the footer links and looks like one of them */
+.dk .sitefoot .linkish {
+  font: inherit; color: var(--muted); background: none; padding: 0; cursor: pointer;
+  border: 0; border-bottom: 1px solid var(--line);
+}
+.dk .sitefoot .linkish:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ── analytics consent dialog (src/Consent.tsx) ── */
+/* A modal everywhere except /privacy and /terms, where it is a bar at the
+   bottom so the notice stays readable. Yes and No share one style on purpose.
+   The dialog carries .dk itself: it renders outside the page frame. */
+.dk.consent {
+  max-width: 30rem; width: calc(100% - 32px); padding: 22px 22px 20px;
+  background: var(--bg); color: var(--ink); font-family: var(--read);
+  border: 1px solid var(--ink); box-shadow: 0 6px 24px rgb(28 27 25 / .18);
+  font-size: .9rem; line-height: 1.55;
+}
+/* undo the page-frame layout .dk brings (full height, flex, no margin) */
+.dk.consent { min-height: 0; margin: auto; overflow-x: visible; font-size: .9rem; }
+.dk.consent:not([open]) { display: none; }
+.dk.consent[open] { display: block; }
+.dk.consent::backdrop { background: rgb(28 27 25 / .45); }
+.dk.consent:not(:modal) {
+  position: fixed; z-index: 10; inset: auto 16px 16px; margin: 0 auto;
+}
+.dk.consent p { margin: 0 0 .7em; }
+.dk.consent .consent-title { font-family: var(--head); font-weight: 500; font-size: 1.1rem; }
+.dk.consent a { color: var(--ink); }
+.dk.consent .consent-btns { display: flex; gap: 10px; margin-top: 16px; }
+.dk.consent .consent-btns .btn { flex: 1 1 0; }

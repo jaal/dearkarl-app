@@ -9,7 +9,7 @@
 set -u
 
 [ -n "${KARL_TOKEN:-}" ] || exit 0   # not configured: stay silent
-URL="${KARL_URL:-https://karl.przemekkudla.pl/mcp}"
+URL="${KARL_URL:-https://dearkarl.com/mcp}"
 MODE="${1:-startup}"
 STATE="${TMPDIR:-/tmp}/karl-inbox-seen"
 STAMP="${TMPDIR:-/tmp}/karl-inbox-stamp"

@@ -1,3 +1,4 @@
+import { HASH_LENGTH } from "../shared/address";
 export interface UserTableRow {
   email: string;
   login?: string;
@@ -37,6 +38,18 @@ class UsersDB {
   }
 
   /**
+   * Deletes the user and every API token they made, in one transaction.
+   * The Drive folder is the user's and is not touched.
+   */
+  async deleteAccount(email: string): Promise<void> {
+    await this.db.batch([
+      this.db.prepare(`DELETE FROM api_tokens WHERE email = ?`).bind(email),
+      this.db.prepare(`DELETE FROM login_codes WHERE email = ?`).bind(email),
+      this.db.prepare(`DELETE FROM users WHERE email = ?`).bind(email),
+    ]);
+  }
+
+  /**
    * Returns true when a login is already taken by any user.
    */
   async loginExists(login: string): Promise<boolean> {
@@ -50,6 +63,34 @@ class UsersDB {
   /**
    * Fetch a user by session. Returns null if not found.
    */
+  /**
+   * True when another user already has an address with this prefix and name
+   * (whatever their hash). `exceptEmail` leaves the asking user out.
+   */
+  async addressNameTaken(
+    prefixAndName: string,
+    exceptEmail: string | null = null,
+  ): Promise<boolean> {
+    const row = await this.db
+      .prepare(
+        `SELECT 1 AS found FROM users
+         WHERE substr(login, 1, length(login) - ?) = ?
+           AND (? IS NULL OR email <> ?)
+         LIMIT 1`,
+      )
+      .bind(HASH_LENGTH + 1, prefixAndName, exceptEmail, exceptEmail)
+      .first();
+    return row !== null;
+  }
+
+  /** Changes a user's address local part. Throws if another user holds it. */
+  async updateLogin(email: string, login: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET login = ? WHERE email = ?`)
+      .bind(login, email)
+      .run();
+  }
+
   async getUserBySid(sid: string): Promise<UserTableRow | null> {
     const row = await this.db
       .prepare(`SELECT * FROM users WHERE session_id = ?`)
@@ -109,18 +150,19 @@ class UsersDB {
       .run();
   }
 
+  /** Ends the browser session only. Karl keeps its Drive access, so mail
+      keeps being saved while the user is logged out. */
   async logout(email: string): Promise<void> {
     await this.db
-      .prepare(
-        `UPDATE users
-         SET access_token = null,
-             access_expires = null,
-             refresh_token = null,
-             refresh_expires = null,
-             session_id = null
-         WHERE email = ?`,
-      )
+      .prepare(`UPDATE users SET session_id = null WHERE email = ?`)
       .bind(email)
+      .run();
+  }
+
+  async setSession(email: string, sessionId: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET session_id = ? WHERE email = ?`)
+      .bind(sessionId, email)
       .run();
   }
 }
@@ -249,6 +291,40 @@ class ApiTokensDB {
       .bind(now, tokenId)
       .run();
   }
+}
+
+/** One "I don't know this address" mail per sender address per this window. */
+export const UNKNOWN_SENDER_NOTICE_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Claim the right to send the unknown-sender mail to `address`. Returns true
+ * (and records the send) if none went out in the last 24 h. A single UPSERT,
+ * so two mails arriving at once cannot both win.
+ */
+/** How long a stranger's address is kept after Karl last answered it. */
+export const UNKNOWN_SENDER_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+export async function claimUnknownSenderNotice(
+  db: D1Database,
+  address: string,
+  now: number,
+): Promise<boolean> {
+  // The privacy policy promises these rows live at most 30 days.
+  await db
+    .prepare(`DELETE FROM unknown_sender_notices WHERE last_sent < ?`)
+    .bind(now - UNKNOWN_SENDER_RETENTION_MS)
+    .run();
+  const row = await db
+    .prepare(
+      `INSERT INTO unknown_sender_notices (address, last_sent)
+       VALUES (?, ?)
+       ON CONFLICT(address) DO UPDATE SET last_sent = excluded.last_sent
+       WHERE unknown_sender_notices.last_sent <= ?
+       RETURNING address`,
+    )
+    .bind(address.toLowerCase(), now, now - UNKNOWN_SENDER_NOTICE_WINDOW_MS)
+    .first();
+  return row !== null;
 }
 
 export default UsersDB;

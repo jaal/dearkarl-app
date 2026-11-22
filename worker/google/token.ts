@@ -1,3 +1,5 @@
+import { DRIVE_FILE_SCOPE } from "./scope";
+
 interface GoogleWebClientSecret {
   client_id: string;
   project_id: string;
@@ -37,7 +39,7 @@ class GoogleToken {
     url.searchParams.set("access_type", "offline");
     url.searchParams.set(
       "scope",
-      "https://www.googleapis.com/auth/drive.file email",
+      `${DRIVE_FILE_SCOPE} email`,
     );
     url.searchParams.set("response_type", "code");
     url.searchParams.set("client_id", this.#config.client_id);
@@ -84,7 +86,6 @@ class GoogleToken {
     }
 
     const data = (await res.json()) as TokenInfo;
-    console.info("GOOGLE", data);
     return {
       valid: true,
       expires_in: Number(data.expires_in),

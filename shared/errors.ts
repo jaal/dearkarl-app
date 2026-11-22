@@ -12,6 +12,16 @@ export interface ApiError {
 }
 
 export const ApiErrors = {
+  LoginCodeInvalid: {
+    status: 400,
+    code: "LOGIN_CODE_INVALID",
+    msg: "That code is wrong or has expired",
+  },
+  DriveScopeMissing: {
+    status: 403,
+    code: "DRIVE_SCOPE_MISSING",
+    msg: "Google did not grant access to the Drive folder",
+  },
   NoSid: {
     status: 401,
     code: "NO_SID",
@@ -51,6 +61,16 @@ export const ApiErrors = {
     status: 404,
     code: "NOT_FOUND",
     msg: "Page not found",
+  },
+  AddressInvalid: {
+    status: 400,
+    code: "ADDRESS_INVALID",
+    msg: "That name can't be used in an address",
+  },
+  AddressTaken: {
+    status: 409,
+    code: "ADDRESS_TAKEN",
+    msg: "Someone already uses that name. Try another one.",
   },
   InternalError: {
     status: 500,

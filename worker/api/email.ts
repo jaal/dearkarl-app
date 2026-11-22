@@ -1,34 +1,30 @@
+import { formatAddress } from "../../shared/address";
 import PostalMime from "postal-mime";
-import UsersDB from "../db";
+import UsersDB, { claimUnknownSenderNotice } from "../db";
 import GoogleDrive, { DriveAuthError } from "../google/drive";
 import sendEmail, {
   ElasticEmailCredentials,
-  escapeHtml,
   sendDiagnosticEmail,
 } from "../send-email";
-import { authError, driveError, unknownUser, wrongRecipient } from "./messages";
+import {
+  EmailContent,
+  couldNotSaveEmail,
+  diagAuthRejectedSubject,
+  diagNoVerdictSubject,
+  savedEmail,
+  signInAgainEmail,
+  unknownSenderEmail,
+  wrongAddressEmail,
+} from "./messages";
 import GoogleToken from "../google/token";
 import { getValidToken } from "./utils";
 import { htmlToMarkdown } from "../../shared/html-to-md";
+import { cloudflareVerdict, explicitlyFailed, provenSenders } from "./senderCheck";
 
 /** Google Drive rejects these in names; also cap the length. */
 function safeFileName(name: string): string {
   const cleaned = name.replace(/[/\\\r\n\t]+/g, "-").trim();
   return (cleaned || "message").slice(0, 120);
-}
-
-/**
- * Reject only mail whose sender authentication explicitly failed. Anything
- * else (header absent, unknown verdict) is let through, so a change in
- * Cloudflare's header format cannot silently drop legitimate mail.
- */
-export function senderAuthenticationFailed(
-  message: ForwardableEmailMessage,
-): boolean {
-  const results = message.headers.get("Authentication-Results") ?? "";
-  // "hardfail" is the historic spelling of an SPF fail that Gmail still uses
-  // in Authentication-Results; softfail/neutral are weaker and let through.
-  return /dmarc=fail/i.test(results) || /spf=(?:fail|hardfail)/i.test(results);
 }
 
 export async function emailHandler(
@@ -41,48 +37,61 @@ export async function emailHandler(
   const email = await parser.parse(await rawEmail.arrayBuffer());
 
   const diagnosticTo = (env as { DIAGNOSTIC_EMAIL?: string }).DIAGNOSTIC_EMAIL;
-  if (senderAuthenticationFailed(message)) {
-    await sendDiagnosticEmail(
-      creds,
-      "Rejected: sender authentication failed",
-      `rawSize=${message.rawSize}`,
-      diagnosticTo,
-    );
+  const send = (to: string, content: EmailContent) =>
+    sendEmail(creds, { to, subject: content.subject, text: content.html });
+
+  // Only Cloudflare's own verdict counts (senderCheck.ts). No verdict at all
+  // means Cloudflare's format changed or the mail did not come through Email
+  // Routing: save nothing, and tell the operator, since every user's mail
+  // would stop the same way.
+  const verdict = cloudflareVerdict(email.headers);
+  if (!verdict) {
+    await sendDiagnosticEmail(creds, diagNoVerdictSubject, `rawSize=${message.rawSize}`, diagnosticTo);
+    return;
+  }
+  if (explicitlyFailed(verdict)) {
+    await sendDiagnosticEmail(creds, diagAuthRejectedSubject, `rawSize=${message.rawSize}`, diagnosticTo);
     return;
   }
 
+  const senders = provenSenders(verdict, email.from?.address, message.from);
   const db = new UsersDB(env.DB);
-  const user = await db.getUser(message.from);
+  let user = null;
+  for (const s of senders) {
+    user = await db.getUser(s.address);
+    if (user) break;
+  }
   if (!user) {
-    await sendEmail(creds, {
-      to: message.from,
-      subject: unknownUser.subject,
-      text: unknownUser.message,
-    });
+    // Reply only to an address SPF vouched for: an unproven envelope may be
+    // someone else's address typed in by a forger, who'd make Karl spam them.
+    const replyTo = senders.find((s) => s.via === "envelope")?.address;
+    if (replyTo && (await claimUnknownSenderNotice(env.DB, replyTo, Date.now()))) {
+      await send(replyTo, unknownSenderEmail({ from: replyTo }));
+    }
     return;
   }
 
-  const emailToLogin = email.to?.[0]?.address?.split("@")[0];
+  // Match on the envelope recipient, not the To header: with auto-forwarding
+  // (e.g. a Gmail filter) the To header still names the original recipient.
+  const toAddress = message.to.toLowerCase();
+  const emailToLogin = toAddress.split("@")[0];
   if (!emailToLogin || user.login !== emailToLogin) {
-    await sendEmail(creds, {
-      to: message.from,
-      subject: wrongRecipient.subject,
-      text: wrongRecipient.message,
-    });
+    await send(
+      user.email,
+      wrongAddressEmail({
+        to: toAddress,
+        karlAddress: formatAddress(user.login ?? ""),
+      }),
+    );
     return;
   }
 
   const secret = env.GOOGLE_CLIENT_SECRET;
   const client = new GoogleToken(secret);
 
-  let accessToken: string | null = await getValidToken(user, client, db);
-  console.info("ACCESS TOKEN", accessToken);
+  const accessToken = await getValidToken(user, client, db);
   if (accessToken === null) {
-    await sendEmail(creds, {
-      to: user.email,
-      subject: authError.subject,
-      text: authError.message,
-    });
+    await send(user.email, signInAgainEmail());
     return;
   }
 
@@ -98,21 +107,17 @@ export async function emailHandler(
       filename,
       email.html ? htmlToMarkdown(email.html) : (email.text ?? "NONE"),
     );
-    await sendEmail(creds, {
-      to: user.email,
-      subject: `Saved to Drive: ${filename}`,
-      text: `The file was created: ${escapeHtml(filename)}`,
-    });
+    await send(user.email, savedEmail());
   } catch (e: any) {
     // Only an actual authorization failure should tell the user to log in
     // again — otherwise the advice is wrong and sends them in a loop.
     const isAuthProblem = e instanceof DriveAuthError;
-    console.info("ERROR 2", e);
-    await sendEmail(creds, {
-      to: user.email,
-      subject: isAuthProblem ? authError.subject : driveError.subject,
-      text: isAuthProblem ? authError.message : driveError.message,
-    });
+    await send(
+      user.email,
+      isAuthProblem
+        ? signInAgainEmail()
+        : couldNotSaveEmail(),
+    );
   }
 }
 

@@ -4,6 +4,7 @@ import GoogleDrive, { DriveAuthError } from "../google/drive";
 import GoogleToken from "../google/token";
 import UsersDB, { UserTableRow } from "../db";
 import { getValidToken } from "../api/utils";
+import { APP_URL } from "../../shared/urls";
 
 /** Thrown when the user's Drive token cannot be obtained/refreshed. */
 export class ReauthNeededError extends Error {
@@ -15,7 +16,7 @@ export class ReauthNeededError extends Error {
 
 const REAUTH_MESSAGE =
   "Google Drive re-authorization required. Log in at " +
-  "https://karl.przemekkudla.pl to refresh your Google access, then retry.";
+  `${APP_URL} to refresh your Google access, then retry.`;
 
 type Deps = {
   user: UserTableRow;

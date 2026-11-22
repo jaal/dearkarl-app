@@ -1,25 +1,81 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Home from "../src/marketing/Home";
 import BlogIndex from "../src/marketing/BlogIndex";
 import BlogPost from "../src/marketing/BlogPost";
 import Privacy from "../src/marketing/Privacy";
 import Terms from "../src/marketing/Terms";
 import NotFound from "../src/marketing/NotFound";
+import { resetSignedIn } from "../src/marketing/useSignedIn";
+
+// No vitest globals here, so Testing Library cannot unmount on its own; without
+// this, every render piles up in one document and ids like #faq repeat.
+afterEach(cleanup);
 
 describe("marketing pages", () => {
-  it("renders the home hero and waitlist", () => {
+  it("renders the home hero, with no waiting list", () => {
     render(
       <MemoryRouter>
         <Home />
       </MemoryRouter>,
     );
     expect(
-      screen.getByText(/Your AI never sees your mailbox/i),
+      screen.getByRole("heading", { level: 1, name: "Email anything to your AI." }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/Your AI never sees your mailbox\. Only what you send it\./i),
     ).toBeTruthy();
     expect(screen.getByText(/How it works/i)).toBeTruthy();
-    expect(screen.getAllByText(/Join the waiting list/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/waiting list/i)).toBeNull();
+  });
+
+  it("puts the primary CTA in the hero and links privacy doubts to the FAQ", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+    const heroCta = container.querySelector(".hero .btn");
+    expect(heroCta?.textContent).toBe("Create your free address");
+    expect(heroCta?.getAttribute("href")).toBe("/app");
+    expect(container.querySelector("#faq")).toBeTruthy();
+    const faqLinks = [...container.querySelectorAll('a[href="#faq"]')];
+    expect(faqLinks.length).toBeGreaterThan(0);
+    expect(container.textContent).not.toMatch(/Two more questions/);
+    expect(container.textContent).not.toMatch(/no token is ever shown/);
+    expect(container.textContent).toMatch(/claude mcp add/);
+  });
+
+  it("shows Register (Google sign-up) and Log in (emailed code) in the top bar", () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+    const nav = screen.getByRole("navigation", { name: "Account" });
+    const links = [...nav.querySelectorAll("a")];
+    expect(links.map((a) => a.textContent)).toEqual(["Register", "Log in"]);
+    expect(links.map((a) => a.getAttribute("href"))).toEqual(["/app", "/login"]);
+  });
+
+  it("shows My account instead of Register / Log in when signed in", async () => {
+    resetSignedIn();
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ signedIn: true })));
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+    const nav = screen.getByRole("navigation", { name: "Account" });
+    await waitFor(() => expect(nav.textContent).toBe("My account"));
+    expect(nav.querySelector("a")?.getAttribute("href")).toBe("/app");
+    expect(screen.getAllByText("Go to my account").length).toBe(1);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    fetchMock.mockRestore();
+    resetSignedIn();
   });
 
   it("renders the blog index", () => {
@@ -35,7 +91,9 @@ describe("marketing pages", () => {
   it("renders a blog post", () => {
     render(
       <MemoryRouter initialEntries={["/blog/what-ai-knows-from-your-email"]}>
-        <BlogPost />
+        <Routes>
+          <Route path="/blog/:slug" element={<BlogPost />} />
+        </Routes>
       </MemoryRouter>,
     );
     expect(screen.getByText(/What can an AI learn about you from your email/i)).toBeTruthy();
@@ -47,14 +105,14 @@ describe("marketing pages", () => {
         <Privacy />
       </MemoryRouter>,
     );
-    expect(screen.getAllByText(/Privacy notice & imprint/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Polityka prywatności/i).length).toBeGreaterThan(0);
 
     render(
       <MemoryRouter>
         <Terms />
       </MemoryRouter>,
     );
-    expect(screen.getAllByText(/Terms of use/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Regulamin/i).length).toBeGreaterThan(0);
   });
 
   it("renders the not-found page", () => {

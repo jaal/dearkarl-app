@@ -17,7 +17,7 @@ a file only when you ask it to.
 ## What you need
 
 - Claude Code (the CLI). Hooks don't run in the claude.ai chat.
-- A Dear Karl token (`karl_...`) from `karl.przemekkudla.pl`.
+- A Dear Karl token (`karl_...`) from `dearkarl.com/app`.
 - `curl` and `python3`. Both come with macOS and most Linux systems.
 
 ## Setup (about 5 minutes)

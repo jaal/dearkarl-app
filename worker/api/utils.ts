@@ -1,6 +1,16 @@
 import { type RequestPayload } from "../../shared/api";
+import {
+  DEFAULT_PREFIX,
+  type RandomInt,
+  buildLocalPart,
+  cryptoRandomInt,
+  nameFromEmail,
+  randomDigits,
+  randomHash,
+} from "../../shared/address";
 import UsersDB, { UserTableRow } from "../db";
 import GoogleToken from "../google/token";
+import { hasDriveScope } from "../google/scope";
 
 export function getSid(req: Request) {
   const cookieHeader = req.headers?.get("cookie");
@@ -26,27 +36,27 @@ export async function getValidToken(
   db: UsersDB,
 ): Promise<string | null> {
   if (await isAccessTokenValidWithGoogle(user, client)) {
-    console.info("VALID TOKEN 1");
     return user.access_token!;
   }
 
   // if (client.isTokenValid(user.access_expires ?? 0))
   // return user.access_token ?? null;
   if (!user.refresh_token) {
-    console.info("INVALID REFRESH TOKEN");
     return null;
   }
   try {
     const refreshed = await client.refreshAccessToken(user.refresh_token);
+    // A refresh keeps whatever was granted: still no Drive means no access.
+    if (!hasDriveScope(refreshed.scope)) return null;
     await db.updateUserTokens({
       email: user.email,
       access_token: refreshed.access_token,
       access_expires: Date.now() + refreshed.expires_in * 1000,
     });
-    console.info("VALID TOKEN 2");
     return refreshed.access_token;
   } catch (e: any) {
-    console.info("ERROR", e);
+    // Google's error code only (e.g. invalid_grant): no token, no address.
+    console.warn("google token refresh failed:", String(e?.message ?? e).slice(0, 120));
     return null;
   }
 }
@@ -67,20 +77,19 @@ export async function isAccessTokenValidWithGoogle(
   if (!user.access_token) return false;
   try {
     const info = await client.checkGoogleTokenValidity(user.access_token);
-    return info.valid;
+    return info.valid && hasDriveScope(info.scope);
   } catch {
     return false;
   }
 }
 
 /**
- * Derive a unique login for a new user from their base email.
+ * Address local part for a new user: `claude-{name}-{hash}`
+ * (see shared/address.ts).
  *
- * The login is seeded from the email's local part (before "@", lowercased).
- * If that login is already taken in the database, a numeric suffix is appended
- * and the lookup is repeated until an unused login is found.
- *
- * Example: `John.Doe@example.com` -> "john.doe", "john.doe1", "john.doe2", ...
+ * The name comes from the email's local part. If another user already has
+ * that name, four random digits are appended to it. The hash is random; the
+ * loop re-rolls in the (unlikely) case the whole local part is taken.
  *
  * Note: the `users.login` column is UNIQUE, so a concurrent insert that loses
  * the check-and-set race still fails safe at the DB constraint.
@@ -88,15 +97,16 @@ export async function isAccessTokenValidWithGoogle(
 export async function getUniqueLogin(
   email: string,
   db: UsersDB,
+  randomInt: RandomInt = cryptoRandomInt,
+  prefix: string = DEFAULT_PREFIX,
 ): Promise<string> {
-  const base = email.split("@")[0].toLowerCase() || "user";
-  let login = base;
-  let suffix = 0;
+  const base = nameFromEmail(email);
+  let name = base;
+  for (let i = 0; i < 20 && (await db.addressNameTaken(`${prefix}-${name}`)); i++)
+    name = `${base}${randomDigits(randomInt)}`;
 
-  while (await db.loginExists(login)) {
-    suffix += 1;
-    login = `${base}${suffix}`;
+  for (;;) {
+    const login = buildLocalPart(prefix, name, randomHash(randomInt));
+    if (!(await db.loginExists(login))) return login;
   }
-
-  return login;
 }
