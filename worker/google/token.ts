@@ -1,5 +1,4 @@
-/** The one Drive scope Karl needs: files it creates, nothing else. */
-export const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+import { DRIVE_FILE_SCOPE } from "./scope";
 
 interface GoogleWebClientSecret {
   client_id: string;
@@ -87,7 +86,6 @@ class GoogleToken {
     }
 
     const data = (await res.json()) as TokenInfo;
-    console.info("GOOGLE", data);
     return {
       valid: true,
       expires_in: Number(data.expires_in),

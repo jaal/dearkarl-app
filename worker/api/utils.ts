@@ -10,6 +10,7 @@ import {
 } from "../../shared/address";
 import UsersDB, { UserTableRow } from "../db";
 import GoogleToken from "../google/token";
+import { hasDriveScope } from "../google/scope";
 
 export function getSid(req: Request) {
   const cookieHeader = req.headers?.get("cookie");
@@ -47,6 +48,8 @@ export async function getValidToken(
   }
   try {
     const refreshed = await client.refreshAccessToken(user.refresh_token);
+    // A refresh keeps whatever was granted: still no Drive means no access.
+    if (!hasDriveScope(refreshed.scope)) return null;
     await db.updateUserTokens({
       email: user.email,
       access_token: refreshed.access_token,
@@ -76,7 +79,7 @@ export async function isAccessTokenValidWithGoogle(
   if (!user.access_token) return false;
   try {
     const info = await client.checkGoogleTokenValidity(user.access_token);
-    return info.valid;
+    return info.valid && hasDriveScope(info.scope);
   } catch {
     return false;
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasDriveScope } from "../worker/api/login";
+import { hasDriveScope } from "../worker/google/scope";
 
 describe("hasDriveScope", () => {
   it("accepts a grant that includes drive.file", () => {

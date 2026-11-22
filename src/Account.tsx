@@ -76,6 +76,8 @@ function Account(props: {
   userEmail: string;
   /** Just came back from /app/reconnect with fresh Google access. */
   reconnected?: boolean;
+  /** False when Karl cannot save to their Drive right now. */
+  driveConnected?: boolean;
   error?: string;
   busy?: boolean;
   onShowConnect: () => void;
@@ -90,10 +92,32 @@ function Account(props: {
   return (
     <div className="card">
       <h1>Your account</h1>
-      <p className="status">
-        <span className="led" aria-hidden="true" />
-        Connected — mail is landing in your Drive folder.
-      </p>
+      {props.driveConnected === false ? (
+        <>
+          <p className="status bad">
+            <span className="led" aria-hidden="true" />
+            Not connected — Karl can't reach your Drive folder.
+          </p>
+          <div className="warn" role="alert" style={{ marginTop: 16 }}>
+            <p>
+              <b>Karl has no access to your Google Drive.</b> Mail you send
+              now is not saved. This happens when access is removed in your
+              Google account, when it expires, or when the Drive box on
+              Google's screen is left unticked.
+            </p>
+            <div className="btn-row" style={{ marginTop: 12 }}>
+              <a className="btn" href="/app/reconnect">
+                Reconnect Google Drive
+              </a>
+            </div>
+          </div>
+        </>
+      ) : (
+        <p className="status">
+          <span className="led" aria-hidden="true" />
+          Connected — mail is landing in your Drive folder.
+        </p>
+      )}
 
       {props.reconnected && (
         <p className="notice" role="status" style={{ marginTop: 16 }}>

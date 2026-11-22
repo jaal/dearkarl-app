@@ -201,11 +201,15 @@ test.describe("4. Google access is lost", () => {
     expect((await stub(request, email)).drive.map((f) => f.content).join()).toContain("found note");
   });
 
-  test("opening the account while access is lost leads to reconnect", async ({ page, request }) => {
+  test("the account page says Drive access is missing and leads to reconnect", async ({ page, request }) => {
     const { email } = await signUp(page);
     await request.post("/api/stub/expire", { form: { email } });
     await page.goto("/");
     await page.getByRole("link", { name: "My account", exact: true }).click();
+    await expect(page.getByText("Not connected — Karl can't reach your Drive folder.")).toBeVisible();
+    await expect(page.getByRole("alert")).toContainText("Mail you send now is not saved");
+    await expect(page.getByText("Connected — mail is landing in your Drive folder.")).toHaveCount(0);
+    await page.getByRole("link", { name: "Reconnect Google Drive" }).click();
     await expect(page).toHaveURL(/\/app\/reconnect$/);
     await expect(page.getByRole("heading", { name: "Reconnect your Google Drive" })).toBeVisible();
     await page.getByRole("button", { name: "Reconnect Google Drive" }).click();

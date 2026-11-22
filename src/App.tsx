@@ -182,6 +182,7 @@ function App(props: {
   const [reconnected, setReconnected] = useState(false);
   const [accountDeleted, setAccountDeleted] = useState(false);
   const [driveMissing, setDriveMissing] = useState(false);
+  const [driveConnected, setDriveConnected] = useState(true);
 
   const goToAccount = () => {
     setStage("account");
@@ -283,7 +284,9 @@ function App(props: {
       setActiveSession(true);
       setUserEmail(session.userEmail);
       setKarlEmail(session.karlEmail);
-      if (takeFlag(RECONNECTED_KEY)) setReconnected(true);
+      setDriveConnected(session.driveConnected !== false);
+      if (takeFlag(RECONNECTED_KEY) && session.driveConnected !== false)
+        setReconnected(true);
     } else {
       setActiveSession(false);
       setUserEmail("");
@@ -463,6 +466,7 @@ function App(props: {
             karlEmail={karlEmail}
             userEmail={userEmail}
             reconnected={reconnected}
+            driveConnected={driveConnected}
             error={error}
             busy={busy}
             onShowConnect={() => setStage("connect")}

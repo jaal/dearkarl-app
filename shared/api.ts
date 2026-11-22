@@ -231,6 +231,8 @@ export function isResponsePayloadActive(
 export interface ActiveSession {
   userEmail: string;
   karlEmail: string;
+  /** False when Karl can no longer save to their Drive. Absent = true. */
+  driveConnected?: boolean;
 }
 
 export function isActiveSession(value: unknown): value is ActiveSession {

@@ -1,5 +1,6 @@
 import { deleteAccountHandler, sessionHandler } from "./account";
-import GoogleToken, { DRIVE_FILE_SCOPE } from "../google/token";
+import GoogleToken from "../google/token";
+import { hasDriveScope } from "../google/scope";
 import {
   RequestPayload,
   ResponsePayloadProfile,
@@ -38,10 +39,6 @@ type AccessData = {
   id_token: string;
   scope?: string;
 };
-
-export function hasDriveScope(scope: string | undefined): boolean {
-  return (scope ?? "").split(/\s+/).includes(DRIVE_FILE_SCOPE);
-}
 
 function convertExpireToDate(expires_in: string) {
   const expiresTmp = parseInt(expires_in);
@@ -186,12 +183,14 @@ export async function loginHandler(
     const user = await usersDb.getUserBySid(sid);
     if (!user) return new ErrorResponse(ApiErrors.NoUser);
 
+    // Signed in either way; driveConnected says whether Karl can still
+    // save to their Drive (access revoked, expired, or the box unticked).
     const accessToken = await getValidToken(user, client, usersDb);
-    if (!accessToken) return new ErrorResponse(ApiErrors.InvalidToken);
 
     let responsePayload: ActiveSession = {
       userEmail: user.email,
       karlEmail: user.login ?? "Invalid",
+      driveConnected: accessToken !== null,
     };
 
     return new Response(JSON.stringify(responsePayload), {
