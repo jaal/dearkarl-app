@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   getLoginUrl: vi.fn(),
   getAccessToken: vi.fn(),
   isTokenValid: vi.fn(),
+  checkGoogleTokenValidity: vi.fn(),
   refreshAccessToken: vi.fn(),
   getUser: vi.fn(),
   getUserBySid: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock("../worker/google/token", () => ({
     getLoginUrl = mocks.getLoginUrl;
     getAccessToken = mocks.getAccessToken;
     isTokenValid = mocks.isTokenValid;
+    checkGoogleTokenValidity = mocks.checkGoogleTokenValidity;
     refreshAccessToken = mocks.refreshAccessToken;
   },
 }));
@@ -119,24 +121,27 @@ describe("/api/active", () => {
 
     expect(res.status).toBe(401);
     expect(mocks.getUserBySid).toHaveBeenCalledWith(sid);
-    expect(mocks.isTokenValid).not.toHaveBeenCalled();
+    expect(mocks.checkGoogleTokenValidity).not.toHaveBeenCalled();
   });
 
-  it("returns 401 when the user's Google token has expired", async () => {
+  it("stays signed in but reports driveConnected: false when Google access is gone", async () => {
     mocks.getUserBySid.mockResolvedValue(userRow);
-    mocks.isTokenValid.mockReturnValue(false);
+    mocks.checkGoogleTokenValidity.mockResolvedValue({ valid: false });
     mocks.refreshAccessToken.mockRejectedValue(new Error("refresh failed"));
 
     const res = await loginHandler(activeRequest(), SECRET, noDb);
 
-    expect(res.status).toBe(401);
-    expect(mocks.isTokenValid).toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ driveConnected: false });
     expect(mocks.refreshAccessToken).toHaveBeenCalledWith("refresh-123");
   });
 
-  it("returns 200 with the active session when the token is valid", async () => {
+  it("returns the active session with driveConnected when Drive access is valid", async () => {
     mocks.getUserBySid.mockResolvedValue(userRow);
-    mocks.isTokenValid.mockReturnValue(true);
+    mocks.checkGoogleTokenValidity.mockResolvedValue({
+      valid: true,
+      scope: "email https://www.googleapis.com/auth/drive.file",
+    });
 
     const res = await loginHandler(activeRequest(), SECRET, noDb);
 
@@ -144,6 +149,7 @@ describe("/api/active", () => {
     expect(await res.json()).toEqual({
       userEmail: "user@example.com",
       karlEmail: "karl-login",
+      driveConnected: true,
     });
   });
 });

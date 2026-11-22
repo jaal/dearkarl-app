@@ -13,6 +13,14 @@ function navigateTo(url: string) {
   window.location.href = url;
 }
 
+/** Where to go after logging in: back to a Claude connector's consent page
+    (/authorize?…) when it sent us here, else the account. Nothing else is
+    accepted, so ?next= can't send anyone off-site. */
+function afterLogin(): string {
+  const next = new URLSearchParams(window.location.search).get("next") ?? "";
+  return next.startsWith("/authorize?") ? next : "/app";
+}
+
 /**
  * /login: returning users get a one-time code by email. New accounts are
  * made at /app, with Google, because the Drive folder needs a Google account.
@@ -29,7 +37,7 @@ export default function Login(): React.JSX.Element {
 
   // Already logged in: nothing to do here.
   useEffect(() => {
-    if (signedIn) navigateTo("/app");
+    if (signedIn) navigateTo(afterLogin());
   }, [signedIn]);
 
   const sendCode = async (address: string) => {
@@ -61,7 +69,7 @@ export default function Login(): React.JSX.Element {
     setBusy(true);
     const result = await verifyLoginCode(sentTo, code);
     if (result === "ok") {
-      navigateTo("/app");
+      navigateTo(afterLogin());
       return;
     }
     setBusy(false);
@@ -77,6 +85,12 @@ export default function Login(): React.JSX.Element {
       <div className="app">
         <div className="card narrow">
           <h1>Log in</h1>
+          {afterLogin() !== "/app" && (
+            <p className="notice" role="status">
+              Log in to connect Claude to your Karl folder. You'll come back to
+              approve it.
+            </p>
+          )}
           {sentTo === null ? (
             <form onSubmit={onEmail}>
               <p className="lede">
