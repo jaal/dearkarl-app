@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import style from "./App.module.css";
 import { formatKarlAddress } from "./karlAddress";
 import { ApiTokens } from "./ApiTokens";
+import { CopyButton } from "./CopyButton";
 import { changeAddressName } from "./server";
 import { KARL_ADDRESS_DOMAIN } from "./karlAddress";
 import { parseLocalPart } from "../shared/address";
@@ -112,6 +113,7 @@ function Account(props: {
           <span className="k">Your address</span>
           <span className="v">
             <span className="mono-inline">{karlAddress}</span>{" "}
+            <CopyButton text={karlAddress} label="Copy address" inline />{" "}
             {!editingAddress && (
               <a
                 href="#"

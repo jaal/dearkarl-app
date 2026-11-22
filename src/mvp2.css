@@ -301,3 +301,10 @@ select { appearance: none;
   .site-foot { padding: 24px 20px 32px; }
   .steps { margin-bottom: 32px; }
 }
+
+/* copy icon inside a line of text (account page address row) */
+.copybtn.copybtn-inline {
+  position: static; display: inline-grid; vertical-align: middle;
+  width: 28px; height: 28px; margin: 0 6px 0 2px;
+}
+.copybtn.copybtn-inline svg { width: 13px; height: 13px; }
