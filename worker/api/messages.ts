@@ -205,6 +205,7 @@ export function loginCodeEmail(v: { code: string; minutes: number }): EmailConte
 export const DIAG_PREFIX = "[DearKarl]";
 
 export const diagAuthRejectedSubject = `${DIAG_PREFIX} Rejected: sender authentication failed`;
+export const diagNoVerdictSubject = `${DIAG_PREFIX} Rejected: no Cloudflare authentication verdict`;
 
 /** `[DearKarl] Error: <first line of the message>`, kept short for filters. */
 export function diagErrorSubject(message: string): string {

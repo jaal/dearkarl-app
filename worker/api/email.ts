@@ -10,6 +10,7 @@ import {
   EmailContent,
   couldNotSaveEmail,
   diagAuthRejectedSubject,
+  diagNoVerdictSubject,
   savedEmail,
   signInAgainEmail,
   unknownSenderEmail,
@@ -18,25 +19,12 @@ import {
 import GoogleToken from "../google/token";
 import { getValidToken } from "./utils";
 import { htmlToMarkdown } from "../../shared/html-to-md";
+import { cloudflareVerdict, explicitlyFailed, provenSenders } from "./senderCheck";
 
 /** Google Drive rejects these in names; also cap the length. */
 function safeFileName(name: string): string {
   const cleaned = name.replace(/[/\\\r\n\t]+/g, "-").trim();
   return (cleaned || "message").slice(0, 120);
-}
-
-/**
- * Reject only mail whose sender authentication explicitly failed. Anything
- * else (header absent, unknown verdict) is let through, so a change in
- * Cloudflare's header format cannot silently drop legitimate mail.
- */
-export function senderAuthenticationFailed(
-  message: ForwardableEmailMessage,
-): boolean {
-  const results = message.headers.get("Authentication-Results") ?? "";
-  // "hardfail" is the historic spelling of an SPF fail that Gmail still uses
-  // in Authentication-Results; softfail/neutral are weaker and let through.
-  return /dmarc=fail/i.test(results) || /spf=(?:fail|hardfail)/i.test(results);
 }
 
 export async function emailHandler(
@@ -49,26 +37,36 @@ export async function emailHandler(
   const email = await parser.parse(await rawEmail.arrayBuffer());
 
   const diagnosticTo = (env as { DIAGNOSTIC_EMAIL?: string }).DIAGNOSTIC_EMAIL;
-  if (senderAuthenticationFailed(message)) {
-    await sendDiagnosticEmail(
-      creds,
-      diagAuthRejectedSubject,
-      `rawSize=${message.rawSize}`,
-      diagnosticTo,
-    );
+  const send = (to: string, content: EmailContent) =>
+    sendEmail(creds, { to, subject: content.subject, text: content.html });
+
+  // Only Cloudflare's own verdict counts (senderCheck.ts). No verdict at all
+  // means Cloudflare's format changed or the mail did not come through Email
+  // Routing: save nothing, and tell the operator, since every user's mail
+  // would stop the same way.
+  const verdict = cloudflareVerdict(email.headers);
+  if (!verdict) {
+    await sendDiagnosticEmail(creds, diagNoVerdictSubject, `rawSize=${message.rawSize}`, diagnosticTo);
+    return;
+  }
+  if (explicitlyFailed(verdict)) {
+    await sendDiagnosticEmail(creds, diagAuthRejectedSubject, `rawSize=${message.rawSize}`, diagnosticTo);
     return;
   }
 
-  const send = (to: string, content: EmailContent) =>
-    sendEmail(creds, { to, subject: content.subject, text: content.html });
+  const senders = provenSenders(verdict, email.from?.address, message.from);
   const db = new UsersDB(env.DB);
-  const user = await db.getUser(message.from);
+  let user = null;
+  for (const s of senders) {
+    user = await db.getUser(s.address);
+    if (user) break;
+  }
   if (!user) {
-    if (await claimUnknownSenderNotice(env.DB, message.from, Date.now())) {
-      await send(
-        message.from,
-        unknownSenderEmail({ from: message.from }),
-      );
+    // Reply only to an address SPF vouched for: an unproven envelope may be
+    // someone else's address typed in by a forger, who'd make Karl spam them.
+    const replyTo = senders.find((s) => s.via === "envelope")?.address;
+    if (replyTo && (await claimUnknownSenderNotice(env.DB, replyTo, Date.now()))) {
+      await send(replyTo, unknownSenderEmail({ from: replyTo }));
     }
     return;
   }
@@ -79,7 +77,7 @@ export async function emailHandler(
   const emailToLogin = toAddress.split("@")[0];
   if (!emailToLogin || user.login !== emailToLogin) {
     await send(
-      message.from,
+      user.email,
       wrongAddressEmail({
         to: toAddress,
         karlAddress: formatAddress(user.login ?? ""),

@@ -333,16 +333,43 @@ async function sendToKarl(request: Request, env: Env): Promise<Response> {
   const to = String(form.get("to") ?? "").trim();
   const subject = String(form.get("subject") ?? "");
   const text = String(form.get("body") ?? "");
-  const auth = form.get("dmarcfail")
-    ? "mx.cloudflare.net; spf=pass; dmarc=fail"
-    : "mx.cloudflare.net; spf=pass; dmarc=pass";
+  // What Cloudflare Email Routing would conclude, in its own header format.
+  // "auth" picks a scenario; the default is an honest mail from `from`.
+  //  - pass:        the user's provider sent it (Forward from Gmail)
+  //  - dmarcfail:   From: forged, the domain's DMARC says fail
+  //  - softfail:    envelope set to `from` from a foreign server; From: is the
+  //                 forger's own domain, which passes DMARC
+  //  - injected:    like softfail, plus a fake "dmarc=pass" header the forger
+  //                 added himself (it sits below Cloudflare's)
+  //  - autoforward: a Gmail filter: From: is a newsletter, envelope is the
+  //                 user's +caf_ address, SPF passes for gmail.com
+  const mode = String(form.get("auth") ?? (form.get("dmarcfail") ? "dmarcfail" : "pass"));
+  const dom = (a: string) => a.split("@")[1] ?? "";
+  let headerFrom = from;
+  let envelope = from;
+  let auth = `mx.cloudflare.net; dkim=pass header.d=${dom(from)}; spf=pass smtp.mailfrom=${from}; dmarc=pass header.from=${dom(from)}`;
+  let extra = "";
+  if (mode === "dmarcfail") {
+    auth = `mx.cloudflare.net; dkim=none; spf=pass smtp.mailfrom=${from}; dmarc=fail header.from=${dom(from)}`;
+  } else if (mode === "softfail" || mode === "injected") {
+    headerFrom = "mallory@forger.example";
+    auth = `mx.cloudflare.net; dkim=pass header.d=forger.example; spf=softfail smtp.mailfrom=${from}; dmarc=pass header.from=forger.example`;
+    if (mode === "injected")
+      extra = `Authentication-Results: mx.cloudflare.net; spf=pass smtp.mailfrom=${from}; dmarc=pass header.from=${dom(from)}\r\n`;
+  } else if (mode === "autoforward") {
+    headerFrom = "news@newsletter.example";
+    const [l, d] = from.split("@");
+    envelope = `${l}+caf_=karl@${d}`;
+    auth = `mx.cloudflare.net; dkim=pass header.d=newsletter.example; spf=pass smtp.mailfrom=${envelope}; dmarc=pass header.from=newsletter.example`;
+  }
   const raw =
-    `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\n` +
-    `Authentication-Results: ${auth}\r\nMIME-Version: 1.0\r\n` +
+    `Authentication-Results: ${auth}\r\n` +
+    `From: ${headerFrom}\r\nTo: ${to}\r\nSubject: ${subject}\r\n` + extra +
+    `MIME-Version: 1.0\r\n` +
     `Content-Type: text/plain; charset=utf-8\r\n\r\n${text}\r\n`;
   const bytes = new TextEncoder().encode(raw);
   const message = {
-    from,
+    from: envelope,
     to,
     raw: new Response(bytes).body!,
     rawSize: bytes.length,

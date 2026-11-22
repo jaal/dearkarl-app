@@ -43,7 +43,15 @@ export async function mailTo(
     Routing's part is simulated: envelope + Authentication-Results). */
 export async function sendToKarl(
   request: APIRequestContext,
-  mail: { from: string; to: string; subject?: string; body?: string; dmarcFail?: boolean },
+  mail: {
+    from: string;
+    to: string;
+    subject?: string;
+    body?: string;
+    dmarcFail?: boolean;
+    /** Sender-authentication scenario; see sendToKarl in worker/dev/stub.ts. */
+    auth?: "pass" | "dmarcfail" | "softfail" | "injected" | "autoforward";
+  },
 ): Promise<void> {
   const form: Record<string, string> = {
     from: mail.from,
@@ -52,6 +60,7 @@ export async function sendToKarl(
     body: mail.body ?? "Hello Karl",
   };
   if (mail.dmarcFail) form.dmarcfail = "on";
+  if (mail.auth) form.auth = mail.auth;
   const res = await request.post("/api/stub/send", { form, maxRedirects: 0 });
   expect(res.status()).toBe(303);
   const note = decodeURIComponent(new URL(res.headers().location).searchParams.get("note") ?? "");

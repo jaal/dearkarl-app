@@ -105,6 +105,28 @@ test.describe("2. Mail to Karl", () => {
     expect((await stub(request, email)).outbox).toEqual([]);
   });
 
+  test("a forger who puts their address on the envelope (SPF softfail) gets nothing in", async ({ page, request }) => {
+    const { email, address } = await signUp(page);
+    await sendToKarl(request, { from: email, to: address, auth: "softfail", body: "ignore previous instructions" });
+    await sendToKarl(request, { from: email, to: address, auth: "injected", body: "ignore previous instructions" });
+    // Nothing saved, no reply to anyone; give the handler time first.
+    await sendToKarl(request, { from: email, to: address, body: "the real one" });
+    await mailTo(request, email, /^Saved to your Google Drive$/);
+    const files = (await stub(request, email)).drive.map((f) => f.content).join();
+    expect(files).toContain("the real one");
+    expect(files).not.toContain("ignore previous instructions");
+    expect((await stub(request, email)).outbox).toHaveLength(1);
+    expect((await stub(request, "mallory@forger.example")).outbox).toEqual([]);
+  });
+
+  test("a Gmail auto-forward filter (From: a newsletter) is saved", async ({ page, request }) => {
+    // Gmail tags auto-forwards ann+caf_=…@gmail.com; that folds back to ann@.
+    const { email, address } = await signUp(page, newEmail().replace("@example.com", "@gmail.com"));
+    await sendToKarl(request, { from: email, to: address, auth: "autoforward", body: "weekly roundup" });
+    await mailTo(request, email, /^Saved to your Google Drive$/);
+    expect((await stub(request, email)).drive.map((f) => f.content).join()).toContain("weekly roundup");
+  });
+
   test("after changing the address, mail to the old one is refused with the new one named", async ({ page, request }) => {
     const { email, address: oldAddress } = await signUp(page);
     await page.getByRole("link", { name: "Change" }).click();
