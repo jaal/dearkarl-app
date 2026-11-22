@@ -36,14 +36,12 @@ export async function getValidToken(
   db: UsersDB,
 ): Promise<string | null> {
   if (await isAccessTokenValidWithGoogle(user, client)) {
-    console.info("VALID TOKEN 1");
     return user.access_token!;
   }
 
   // if (client.isTokenValid(user.access_expires ?? 0))
   // return user.access_token ?? null;
   if (!user.refresh_token) {
-    console.info("INVALID REFRESH TOKEN");
     return null;
   }
   try {
@@ -55,10 +53,10 @@ export async function getValidToken(
       access_token: refreshed.access_token,
       access_expires: Date.now() + refreshed.expires_in * 1000,
     });
-    console.info("VALID TOKEN 2");
     return refreshed.access_token;
   } catch (e: any) {
-    console.info("ERROR", e);
+    // Google's error code only (e.g. invalid_grant): no token, no address.
+    console.warn("google token refresh failed:", String(e?.message ?? e).slice(0, 120));
     return null;
   }
 }

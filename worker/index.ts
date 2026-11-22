@@ -67,7 +67,8 @@ export default {
       }
       return loginHandler(request, secret, env.DB);
     } catch (error) {
-      console.error("login handler failed", error);
+      // Name and message only: a request body or address must never reach the logs.
+      console.error("handler failed:", (error as Error)?.name, (error as Error)?.message?.slice(0, 200));
       return new ErrorResponse(ApiErrors.InternalError);
     }
   },

@@ -90,7 +90,8 @@ export async function sendDiagnosticEmail(
       text: escapeHtml(text),
     });
   } catch (e: any) {
-    console.error("DIAG EMAIL", e.message ?? e);
+    // Elastic's reply can echo the recipient; log only that it failed.
+    console.error("diagnostic mail failed:", (e?.message ?? "").match(/\d{3}/)?.[0] ?? "no status");
   }
 }
 

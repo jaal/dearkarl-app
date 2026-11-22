@@ -45,11 +45,9 @@ class GoogleDrive {
       `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
       { headers: this.#headers },
     );
-    console.info("DRIVE searchRes", JSON.stringify(searchRes));
     if (!searchRes.ok) {
       const text = await searchRes.text();
 
-      console.info("DRIVE ERROR searchRes", searchRes.status);
       throw driveError(searchRes.status, text, "Failed to search for folder");
     }
     const searchData = (await searchRes.json()) as { files?: DriveFile[] };
@@ -68,10 +66,8 @@ class GoogleDrive {
         }),
       },
     );
-    console.info("DRIVE createRes", createRes);
 
     if (!createRes.ok) {
-      console.info("DRIVE ERROR createRes");
       throw driveError(
         createRes.status,
         await createRes.text(),
@@ -80,7 +76,6 @@ class GoogleDrive {
     }
 
     const created = (await createRes.json()) as DriveFile;
-    console.info("DRIVE created", created);
     if (!created?.id) throw new Error("Drive did not return a folder id");
     return created.id;
   }
@@ -268,7 +263,7 @@ class GoogleDrive {
       throw driveError(
         uploadRes.status,
         await uploadRes.text(),
-        `Failed to create ${name}`,
+        "Failed to create the file",
       );
     }
 
