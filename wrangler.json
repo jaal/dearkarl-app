@@ -3,8 +3,14 @@
   "name": "dearkarl-app",
   "main": "worker/index.ts",
   "routes": [
-    { "pattern": "dearkarl.com", "custom_domain": true },
-    { "pattern": "www.dearkarl.com", "custom_domain": true }
+    {
+      "pattern": "dearkarl.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.dearkarl.com",
+      "custom_domain": true
+    }
   ],
   "compatibility_date": "2026-08-01",
   "upload_source_maps": true,
@@ -13,7 +19,10 @@
     "run_worker_first": [
       "/api/*",
       "/mcp",
-      "/k/*"
+      "/k/*",
+      "/authorize",
+      "/oauth/*",
+      "/.well-known/*"
     ]
   },
   "d1_databases": [
@@ -33,6 +42,15 @@
   "send_email": [
     {
       "name": "EMAIL"
+    }
+  ],
+  "compatibility_flags": [
+    "global_fetch_strictly_public"
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_KV",
+      "id": "f827e84e5404457baa3bb3ad2dcd96a3"
     }
   ]
 }

@@ -2,7 +2,10 @@ import loginHandler from "./api/login";
 import emailHandler from "./api/email";
 import ErrorResponse, { ApiErrors } from "./api/errors";
 import { readElasticCredentials, sendDiagnosticEmail } from "./send-email";
-import { MCP_PATH } from "../shared/api";
+import { ApiPaths } from "../shared/api";
+import UsersDB from "./db";
+import { getSid } from "./api/utils";
+import { authorizeHandler, oauthProvider, revokeAllGrants } from "./mcp/oauth";
 import { diagErrorSubject } from "./api/messages";
 import { mcpHandler } from "./mcp/handler";
 import { handleStub, installStubForEmail } from "./dev/stub";
@@ -42,35 +45,50 @@ async function posthogProxy(request: Request, url: URL): Promise<Response> {
   return out;
 }
 
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    const kUrl = new URL(request.url);
-    if (kUrl.pathname.startsWith("/k/")) return posthogProxy(request, kUrl);
+/** Everything that isn't OAuth protocol or /mcp: pages, API, /authorize. */
+async function appFetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const url = new URL(request.url);
+  if (url.pathname.startsWith("/k/")) return posthogProxy(request, url);
 
-    // Local walkthroughs only (GOOGLE_STUB=1 in .dev.vars, on localhost).
-    const stubbed = await handleStub(request, env);
-    if (stubbed) return stubbed;
+  // Local walkthroughs only (GOOGLE_STUB=1 in .dev.vars, on localhost).
+  const stubbed = await handleStub(request, env);
+  if (stubbed) return stubbed;
 
-    const secret = env.GOOGLE_CLIENT_SECRET;
-    if (!secret)
-      return new Response(JSON.stringify({ error: "Missing secret" }), {
-        status: 500,
-      });
+  const secret = env.GOOGLE_CLIENT_SECRET;
+  if (!secret)
+    return new Response(JSON.stringify({ error: "Missing secret" }), {
+      status: 500,
+    });
 
-    try {
-      const url = new URL(request.url);
-      if (url.pathname === MCP_PATH) {
-        return mcpHandler(request, env, ctx);
-      }
-      if (isEmailLoginPath(url)) {
-        return await emailLoginHandler(request, env);
-      }
-      return loginHandler(request, secret, env.DB);
-    } catch (error) {
-      // Name and message only: a request body or address must never reach the logs.
-      console.error("handler failed:", (error as Error)?.name, (error as Error)?.message?.slice(0, 200));
-      return new ErrorResponse(ApiErrors.InternalError);
+  try {
+    if (url.pathname === "/authorize") return await authorizeHandler(request, env);
+    if (isEmailLoginPath(url)) {
+      return await emailLoginHandler(request, env);
     }
+    if (url.pathname === ApiPaths.accountDelete && request.method === "POST") {
+      // Whoever deletes their account also cuts off every Claude connector.
+      const sid = getSid(request);
+      const user = sid ? await new UsersDB(env.DB).getUserBySid(sid) : null;
+      const res = await loginHandler(request, secret, env.DB);
+      if (res.ok && user) ctx.waitUntil(revokeAllGrants(env, user.email).catch(() => {}));
+      return res;
+    }
+    return loginHandler(request, secret, env.DB);
+  } catch (error) {
+    // Name and message only: a request body or address must never reach the logs.
+    console.error("handler failed:", (error as Error)?.name, (error as Error)?.message?.slice(0, 200));
+    return new ErrorResponse(ApiErrors.InternalError);
+  }
+}
+
+export default {
+  // The OAuth provider answers discovery (/.well-known/*), /oauth/token and
+  // /oauth/register itself, checks the token on /mcp, and hands everything
+  // else to appFetch.
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    installStubForEmail(env); // the stub's fake Google, for /mcp on localhost
+    const origin = new URL(request.url).origin;
+    return oauthProvider(origin, { mcp: mcpHandler, app: appFetch }).fetch(request, env, ctx);
   },
   async email(
     message: ForwardableEmailMessage,
