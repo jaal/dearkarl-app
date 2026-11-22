@@ -1,3 +1,6 @@
+/** The one Drive scope Karl needs: files it creates, nothing else. */
+export const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+
 interface GoogleWebClientSecret {
   client_id: string;
   project_id: string;
@@ -37,7 +40,7 @@ class GoogleToken {
     url.searchParams.set("access_type", "offline");
     url.searchParams.set(
       "scope",
-      "https://www.googleapis.com/auth/drive.file email",
+      `${DRIVE_FILE_SCOPE} email`,
     );
     url.searchParams.set("response_type", "code");
     url.searchParams.set("client_id", this.#config.client_id);

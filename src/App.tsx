@@ -7,6 +7,7 @@ import {
   getLoginUrl,
   logout,
   requestToken,
+  DRIVE_SCOPE_MISSING,
 } from "./server";
 import Account from "./Account";
 import Address from "./Address";
@@ -33,6 +34,7 @@ const RECONNECT_TTL_MS = 15 * 60 * 1000;
 // One-shot flags set by the OAuth callback and read by the page it lands on.
 const RECONNECTED_KEY = "dk_reconnected";
 const SIGNIN_FAILED_KEY = "dk_signin_failed";
+const DRIVE_MISSING_KEY = "dk_drive_missing";
 const ACCOUNT_DELETED_KEY = "dk_account_deleted";
 
 const PAGE_TITLE = "Your account — dearkarl";
@@ -41,6 +43,8 @@ const PAGE_DESCRIPTION =
 
 const SIGNIN_FAILED_MESSAGE =
   "Google sign-in didn't go through. Please try again.";
+const DRIVE_MISSING_MESSAGE =
+  "Google didn't give Karl access to your Drive folder. Try again and tick the Drive box on Google's screen.";
 
 type Stage = "destination" | "address" | "connect" | "account";
 
@@ -177,6 +181,7 @@ function App(props: {
   const [stage, setStage] = useState<Stage>(readStage);
   const [reconnected, setReconnected] = useState(false);
   const [accountDeleted, setAccountDeleted] = useState(false);
+  const [driveMissing, setDriveMissing] = useState(false);
 
   const goToAccount = () => {
     setStage("account");
@@ -225,6 +230,15 @@ function App(props: {
     window.history.replaceState({}, "", "/app");
     const reconnecting = takePendingReconnect();
     const profile = await requestToken(code);
+    if (profile === DRIVE_SCOPE_MISSING) {
+      // Signed in, but the Drive checkbox was left empty: no account was
+      // made (or the old tokens were kept), so ask for the consent again.
+      writeSession(DRIVE_MISSING_KEY, "1");
+      if (reconnecting) writeSession(RECONNECT_KEY, String(Date.now()));
+      setBusy(false);
+      navigateTo(reconnecting ? "/app/reconnect" : "/app");
+      return;
+    }
     if (!profile) {
       // The code exchange failed: say so on the page the user started from,
       // instead of silently dropping them back on the sign-in screen.
@@ -249,6 +263,10 @@ function App(props: {
     // One-shot flags only ever switch a notice on: StrictMode runs this twice
     // in development, and the second run finds them already taken.
     if (takeFlag(ACCOUNT_DELETED_KEY)) setAccountDeleted(true);
+    if (takeFlag(DRIVE_MISSING_KEY)) {
+      if (props.reconnect) setError(DRIVE_MISSING_MESSAGE);
+      else setDriveMissing(true);
+    }
     const session = await getActiveSession();
     if (session === DRIVE_ACCESS_LOST) {
       // Signed in, but Karl can no longer reach their Drive: the only useful
@@ -307,10 +325,14 @@ function App(props: {
         ) : loading ? (
           <p className="small">Loading…</p>
         ) : !activeSession ? (
-          props.refused ? (
+          props.refused || driveMissing ? (
             <SignInRefused
-              onRetry={() =>
-                navigateTo(takePendingReconnect() ? "/app/reconnect" : "/app")
+              driveUnticked={driveMissing && !props.refused}
+              onRetry={
+                driveMissing && !props.refused
+                  ? loginGoogle
+                  : () =>
+                      navigateTo(takePendingReconnect() ? "/app/reconnect" : "/app")
               }
             />
           ) : (

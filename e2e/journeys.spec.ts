@@ -45,6 +45,21 @@ test.describe("1. A new visitor signs up", () => {
     await googleConsent(page, email);
     await expect(page.getByRole("heading", { name: "Where your mail lands" })).toBeVisible();
   });
+
+  test("signs in but leaves Google's Drive box unticked: no account, asked again", async ({ page }) => {
+    const email = newEmail();
+    await page.goto("/app");
+    await page.getByRole("button", { name: "Continue with Google" }).click();
+    await googleConsent(page, email, true, false);
+    await expect(page.getByRole("heading", { name: "Drive access wasn't ticked" })).toBeVisible();
+    // No session was started (page.request shares the browser's cookies).
+    expect((await page.request.get("/api/active")).ok()).toBe(false);
+
+    // "Try again" goes straight back to Google's consent.
+    await page.getByRole("button", { name: "Try again" }).click();
+    await googleConsent(page, email);
+    await expect(page.getByRole("heading", { name: "Where your mail lands" })).toBeVisible();
+  });
 });
 
 test.describe("2. Mail to Karl", () => {
@@ -196,6 +211,22 @@ test.describe("4. Google access is lost", () => {
     await page.getByRole("button", { name: "Reconnect Google Drive" }).click();
     await googleConsent(page, email);
     await expect(page.getByText("Drive access renewed.")).toBeVisible();
+  });
+
+  test("reconnecting with the Drive box unticked says so and keeps asking", async ({ page, request }) => {
+    const { email, address } = await signUp(page);
+    await request.post("/api/stub/expire", { form: { email } });
+    await page.goto("/app/reconnect");
+    await page.getByRole("button", { name: "Reconnect Google Drive" }).click();
+    await googleConsent(page, email, true, false);
+    await expect(page).toHaveURL(/\/app\/reconnect$/);
+    await expect(page.getByRole("alert")).toContainText("tick the Drive box");
+
+    await page.getByRole("button", { name: "Reconnect Google Drive" }).click();
+    await googleConsent(page, email);
+    await expect(page.getByText("Drive access renewed.")).toBeVisible();
+    await sendToKarl(request, { from: email, to: address, body: "after the tick" });
+    await mailTo(request, email, /^Saved to your Google Drive$/);
   });
 });
 

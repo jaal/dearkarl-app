@@ -1,5 +1,5 @@
 import { deleteAccountHandler, sessionHandler } from "./account";
-import GoogleToken from "../google/token";
+import GoogleToken, { DRIVE_FILE_SCOPE } from "../google/token";
 import {
   RequestPayload,
   ResponsePayloadProfile,
@@ -36,7 +36,12 @@ type AccessData = {
   refresh_token: string;
   refresh_token_expires_in: string;
   id_token: string;
+  scope?: string;
 };
+
+export function hasDriveScope(scope: string | undefined): boolean {
+  return (scope ?? "").split(/\s+/).includes(DRIVE_FILE_SCOPE);
+}
 
 function convertExpireToDate(expires_in: string) {
   const expiresTmp = parseInt(expires_in);
@@ -102,6 +107,12 @@ export async function loginHandler(
     )) as AccessData | null;
     if (!access || access.id_token === undefined)
       return new ErrorResponse(ApiErrors.CodeInvalidToken);
+
+    // Google's consent screen shows Drive as a separate checkbox, and lets
+    // the user continue with it unticked. Without it Karl cannot save a
+    // thing, so make no account and keep any tokens already stored.
+    if (!hasDriveScope(access.scope))
+      return new ErrorResponse(ApiErrors.DriveScopeMissing);
 
     const jwtPayload = access.id_token.split(".")[1];
     const decoded = JSON.parse(

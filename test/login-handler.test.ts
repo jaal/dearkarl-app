@@ -17,7 +17,11 @@ const mocks = vi.hoisted(() => ({
   addressNameTaken: vi.fn(),
 }));
 
+const DRIVE_GRANT =
+  "email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email openid";
+
 vi.mock("../worker/google/token", () => ({
+  DRIVE_FILE_SCOPE: "https://www.googleapis.com/auth/drive.file",
   default: class {
     getLoginUrl = mocks.getLoginUrl;
     getAccessToken = mocks.getAccessToken;
@@ -163,6 +167,7 @@ describe("/api/code", () => {
       refresh_token: "r",
       refresh_token_expires_in: "604800",
       id_token: idToken,
+      scope: DRIVE_GRANT,
     });
   });
 
@@ -205,9 +210,27 @@ describe("/api/code", () => {
       expires_in: "3600",
       refresh_token: "r",
       id_token: idToken,
+      scope: DRIVE_GRANT,
     });
     const res = await loginHandler(codeRequest(), SECRET, noDb);
     expect(res.headers.get("Set-Cookie")).toMatch(/Max-Age=2592000(;|$)/);
+  });
+
+  it("makes no account and keeps stored tokens when the Drive box was left unticked", async () => {
+    mocks.getUser.mockResolvedValue(null);
+    mocks.getAccessToken.mockResolvedValue({
+      access_token: "a",
+      expires_in: "3600",
+      refresh_token: "r",
+      id_token: idToken,
+      scope: "openid https://www.googleapis.com/auth/userinfo.email",
+    });
+    const res = await loginHandler(codeRequest(), SECRET, noDb);
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ code: "DRIVE_SCOPE_MISSING" });
+    expect(res.headers.get("Set-Cookie")).toBeNull();
+    expect(mocks.addUser).not.toHaveBeenCalled();
+    expect(mocks.updateUserTokens).not.toHaveBeenCalled();
   });
 
   it("joins a parallel first sign-in instead of failing on the duplicate", async () => {

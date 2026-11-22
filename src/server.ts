@@ -23,6 +23,9 @@ export { isActiveSession, isLoginUrl };
     user must reconnect Drive before mail can be saved again. */
 export const DRIVE_ACCESS_LOST = "drive-access-lost" as const;
 
+/** Google signed the user in but they left the Drive checkbox unticked. */
+export const DRIVE_SCOPE_MISSING = "drive-scope-missing" as const;
+
 export const getActiveSession = async (): Promise<
   ActiveSession | typeof DRIVE_ACCESS_LOST | null
 > => {
@@ -74,7 +77,7 @@ export const deleteAccount = async (): Promise<boolean> => {
 
 export const requestToken = async (
   code: string,
-): Promise<ResponsePayloadProfile | null> => {
+): Promise<ResponsePayloadProfile | typeof DRIVE_SCOPE_MISSING | null> => {
   try {
     const response = await fetch(ApiPaths.code, {
       method: "POST",
@@ -82,7 +85,9 @@ export const requestToken = async (
       body: JSON.stringify({ code: code }),
     });
     if (!response.ok) {
-      console.info(await response.json());
+      const body = await response.json().catch(() => null);
+      if (isResponsePayloadError(body) && body.code === ApiErrors.DriveScopeMissing.code)
+        return DRIVE_SCOPE_MISSING;
       return null;
     }
     const result = await response.json();

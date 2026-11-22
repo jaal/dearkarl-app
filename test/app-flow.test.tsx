@@ -7,6 +7,7 @@ import * as server from "../src/server";
 
 vi.mock("../src/server", () => ({
   DRIVE_ACCESS_LOST: "drive-access-lost",
+  DRIVE_SCOPE_MISSING: "drive-scope-missing",
   getActiveSession: vi.fn(),
   getLoginUrl: vi.fn(),
   logout: vi.fn(),

@@ -69,7 +69,7 @@ function bearerEmail(init?: RequestInit): string | null {
   return emailOf(h.get("Authorization")?.replace(/^Bearer\s+/i, ""));
 }
 
-function tokenResponse(email: string, withRefresh: boolean) {
+function tokenResponse(email: string, withRefresh: boolean, drive = true) {
   const idPayload = b64(JSON.stringify({ email, email_verified: true }))
     .replace(/\+/g, "-")
     .replace(/\//g, "_");
@@ -80,7 +80,9 @@ function tokenResponse(email: string, withRefresh: boolean) {
       ? { refresh_token: refreshToken(email), refresh_token_expires_in: "604799" }
       : {}),
     id_token: `e30.${idPayload}.stub`,
-    scope: "https://www.googleapis.com/auth/drive.file email",
+    scope: drive
+      ? "https://www.googleapis.com/auth/drive.file email"
+      : "openid https://www.googleapis.com/auth/userinfo.email",
     token_type: "Bearer",
   });
 }
@@ -92,8 +94,10 @@ async function fakeGoogle(url: URL, init?: RequestInit): Promise<Response> {
     const form = new URLSearchParams(String(init?.body ?? ""));
     if (form.get("grant_type") === "authorization_code") {
       const code = form.get("code") ?? "";
-      if (!code.startsWith("stub:")) return json({ error: "invalid_grant" }, 400);
-      const who = decodeURIComponent(code.slice(5));
+      const m = /^stub(\+drive)?:(.*)$/.exec(code);
+      if (!m) return json({ error: "invalid_grant" }, 400);
+      const who = decodeURIComponent(m[2]);
+      if (!m[1]) return tokenResponse(who, true, false);
       state.expired.delete(who); // a fresh consent renews access
       return tokenResponse(who, true);
     }
@@ -240,6 +244,7 @@ function consentPage(url: URL): Response {
 <form method="get" action="/api/stub/google/decide">
   <input type="hidden" name="redirect_uri" value="${esc(redirect)}">
   <label>Google account<input name="email" value="ania@example.com"></label>
+  <label><input type="checkbox" name="drive" value="1" checked style="width:auto"> See, edit, create and delete only the Drive files you use with this app</label><br>
   <button name="decision" value="allow">Allow</button>
   <button name="decision" value="deny">Cancel</button>
 </form>`,
@@ -250,7 +255,9 @@ function decide(url: URL): Response {
   const target = new URL(url.searchParams.get("redirect_uri") ?? "/", url);
   if (url.searchParams.get("decision") === "allow") {
     const email = (url.searchParams.get("email") ?? "").trim().toLowerCase();
-    target.searchParams.set("code", `stub:${encodeURIComponent(email)}`);
+    // A code without "+drive" stands for a consent with the Drive box unticked.
+    const drive = url.searchParams.get("drive") === "1" ? "+drive" : "";
+    target.searchParams.set("code", `stub${drive}:${encodeURIComponent(email)}`);
   } else {
     target.searchParams.set("error", "access_denied");
   }

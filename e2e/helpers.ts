@@ -58,10 +58,17 @@ export async function sendToKarl(
   expect(note, "the inbound handler must not throw").not.toMatch(/threw/);
 }
 
-/** On the stub's Google consent screen: pick the account, Allow or Cancel. */
-export async function googleConsent(page: Page, email: string, allow = true): Promise<void> {
+/** On the stub's Google consent screen: pick the account, tick or untick
+    Drive access, Allow or Cancel. */
+export async function googleConsent(
+  page: Page,
+  email: string,
+  allow = true,
+  drive = true,
+): Promise<void> {
   await expect(page).toHaveURL(/\/api\/stub\/google\/auth/);
   await page.getByLabel("Google account").fill(email);
+  if (!drive) await page.getByLabel(/Drive files you use with this app/).uncheck();
   await page.getByRole("button", { name: allow ? "Allow" : "Cancel" }).click();
 }
 

@@ -17,6 +17,11 @@ export const ApiErrors = {
     code: "LOGIN_CODE_INVALID",
     msg: "That code is wrong or has expired",
   },
+  DriveScopeMissing: {
+    status: 403,
+    code: "DRIVE_SCOPE_MISSING",
+    msg: "Google did not grant access to the Drive folder",
+  },
   NoSid: {
     status: 401,
     code: "NO_SID",
