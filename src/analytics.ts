@@ -5,7 +5,7 @@
 // leaves the page and nothing is read from or written to the device except the
 // answer itself (localStorage.dk_consent). After "Yes": a first-party cookie +
 // localStorage visitor ID, 365 days, and visit/tab IDs in sessionStorage. "No"
-// after a "Yes" deletes that ID; the privacy notice (PL §5 / EN §7) promises it.
+// after a "Yes" deletes that ID; the privacy notice (§5) promises it.
 //
 // Off for good, in code and in the PostHog project: session replay, surveys,
 // heatmaps, scroll depth, identify(). Turning any of them on needs a new
