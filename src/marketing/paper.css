@@ -369,3 +369,34 @@
   .dk .rowitem { padding: 11px 2px; }
   .dk .btn,   .dk .btnrow .btn { width: auto; flex: 1 1 0; }
 }
+
+/* a <button> that sits among the footer links and looks like one of them */
+.dk .sitefoot .linkish {
+  font: inherit; color: var(--muted); background: none; padding: 0; cursor: pointer;
+  border: 0; border-bottom: 1px solid var(--line);
+}
+.dk .sitefoot .linkish:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ── analytics consent dialog (src/Consent.tsx) ── */
+/* A modal everywhere except /privacy and /terms, where it is a bar at the
+   bottom so the notice stays readable. Yes and No share one style on purpose.
+   The dialog carries .dk itself: it renders outside the page frame. */
+.dk.consent {
+  max-width: 30rem; width: calc(100% - 32px); padding: 22px 22px 20px;
+  background: var(--bg); color: var(--ink); font-family: var(--read);
+  border: 1px solid var(--ink); box-shadow: 0 6px 24px rgb(28 27 25 / .18);
+  font-size: .9rem; line-height: 1.55;
+}
+/* undo the page-frame layout .dk brings (full height, flex, no margin) */
+.dk.consent { min-height: 0; margin: auto; overflow-x: visible; font-size: .9rem; }
+.dk.consent:not([open]) { display: none; }
+.dk.consent[open] { display: block; }
+.dk.consent::backdrop { background: rgb(28 27 25 / .45); }
+.dk.consent:not(:modal) {
+  position: fixed; z-index: 10; inset: auto 16px 16px; margin: 0 auto;
+}
+.dk.consent p { margin: 0 0 .7em; }
+.dk.consent .consent-title { font-family: var(--head); font-weight: 500; font-size: 1.1rem; }
+.dk.consent a { color: var(--ink); }
+.dk.consent .consent-btns { display: flex; gap: 10px; margin-top: 16px; }
+.dk.consent .consent-btns .btn { flex: 1 1 0; }

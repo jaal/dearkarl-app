@@ -14,6 +14,7 @@ import Privacy from "./marketing/Privacy.tsx";
 import Terms from "./marketing/Terms.tsx";
 import NotFound from "./marketing/NotFound.tsx";
 import Login from "./Login.tsx";
+import Consent from "./Consent.tsx";
 
 // The hosted signup/account flow (the current app) lives at /app. The marketing
 // site (ported from dearkarl.com) is the root. The OAuth callback returns to
@@ -55,6 +56,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<Home />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Consent />
       </BrowserRouter>
     </AppProvider>
   </StrictMode>,

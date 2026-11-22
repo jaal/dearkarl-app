@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { SITE, OPERATOR } from "./site";
 import useSignedIn from "./useSignedIn";
+import { CONSENT_OPEN_EVENT } from "../analytics";
 
 // Every marketing page's frame: the brand bar and the footer. Pages fill the
 // middle via children. In the SPA the shell HTML is shared, so the page's
@@ -67,6 +68,13 @@ export default function Base(props: BaseProps): React.JSX.Element {
             <Link to="/terms">Terms · Regulamin</Link>
             <a href={SITE.repo}>Source on GitHub</a>
             <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a>
+            <button
+              className="linkish"
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(CONSENT_OPEN_EVENT))}
+            >
+              Cookie settings
+            </button>
           </nav>
         </div>
       </footer>

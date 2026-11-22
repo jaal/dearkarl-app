@@ -12,6 +12,15 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
     baseURL: "http://localhost:5180",
+    // Every journey starts as a visitor who already said "No" to analytics,
+    // so the consent dialog stays out of the way; e2e/consent.spec.ts
+    // clears this to test the dialog itself.
+    storageState: {
+      cookies: [],
+      origins: [
+        { origin: "http://localhost:5180", localStorage: [{ name: "dk_consent", value: "no" }] },
+      ],
+    },
     channel: "chrome",
     headless: true,
     trace: "retain-on-failure",
