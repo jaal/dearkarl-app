@@ -3,6 +3,14 @@ import style from "./App.module.css";
 import type { ApiTokenCreated, ApiTokenSummary } from "./server";
 import { createApiToken, listApiTokens, revokeApiToken } from "./server";
 import { MCP_URL } from "../shared/urls";
+import { CopyButton } from "./CopyButton";
+import {
+  AUTO_CHECK_PROMPT,
+  CHECK_EVERY_MINUTES,
+  connectCommand,
+  readStoredToken,
+  storeToken,
+} from "./claudeCodeLine";
 
 const EXPIRY_OPTIONS = [
   { label: "Never", days: null },
@@ -16,70 +24,50 @@ function formatDate(epochMs: number | null): string {
   return new Date(epochMs).toLocaleString();
 }
 
-function CopySheetsIcon() {
-  return (
-    <svg
-      className="sheets"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="9" y="9" width="12" height="12" rx="2" />
-      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-    </svg>
-  );
+/** A stored token is only worth showing while it is still on the active list. */
+function stillActive(token: string, tokens: ApiTokenSummary[]): boolean {
+  return tokens.some((t) => t.prefix && token.startsWith(t.prefix));
 }
 
-function CopyTickIcon() {
-  return (
-    <svg
-      className="tick"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
+/**
+ * Everything about letting Claude read the folder: the Claude Code line, the
+ * connector URL for Claude's apps, and the Personal Access Tokens behind the
+ * line. One section, because the line is just a token wrapped in a command.
+ */
 export function ApiTokens(): React.JSX.Element {
   const [tokens, setTokens] = useState<ApiTokenSummary[]>([]);
   const [name, setName] = useState("");
   const [expiry, setExpiry] = useState<number | null>(null);
+  /** The token the Claude Code line is filled with, if we still know it. */
+  const [token, setToken] = useState<string | null>(readStoredToken);
+  /** Just generated on this page: show it raw, once, with the warning. */
   const [created, setCreated] = useState<ApiTokenCreated | null>(null);
-  const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   const refresh = async () => {
     const list = await listApiTokens();
-    if (list) setTokens(list);
+    if (!list) return;
+    setTokens(list);
+    setToken((t) => (t && stillActive(t, list) ? t : null));
   };
 
   useEffect(() => {
     refresh();
   }, []);
 
-  const generate = async () => {
+  const generate = async (tokenName: string | undefined, days?: number) => {
     setError("");
     setBusy(true);
-    const result = await createApiToken(name.trim() || undefined, expiry ?? undefined);
+    const result = await createApiToken(tokenName, days);
     setBusy(false);
     if (!result) {
       setError("Could not generate a token. Please try again.");
       return;
     }
     setCreated(result);
-    setCopied(false);
+    setToken(result.token);
+    storeToken(result.token);
     setName("");
     refresh();
   };
@@ -91,26 +79,12 @@ export function ApiTokens(): React.JSX.Element {
     refresh();
   };
 
-  const copyToken = async () => {
-    if (!created) return;
-    try {
-      await navigator.clipboard.writeText(created.token);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      // Clipboard may be unavailable; the token is still select-all in the box.
-    }
-  };
-
   return (
-    <>
-      <h2>MCP / API access</h2>
+    <section aria-labelledby="connect-claude">
+      <h2 id="connect-claude">Connect Claude</h2>
       <p>
-        Personal Access Tokens let AI tools (MCP clients such as Claude Code or
-        Claude Desktop) list and read the files in your <code>dearkarl</code>{" "}
-        Google Drive folder. Point them at{" "}
-        <code>{MCP_URL}</code> and send the token as{" "}
-        <code>Authorization: Bearer &lt;token&gt;</code>.
+        Claude reads the files in your <code>dearkarl</code> Drive folder
+        through MCP — read-only, nothing else in your Drive.
       </p>
 
       {error && (
@@ -119,101 +93,161 @@ export function ApiTokens(): React.JSX.Element {
         </p>
       )}
 
-      {created && (
+      <h3>Claude Code</h3>
+      <p className="small">
+        Paste this line into your terminal once, then open a new Claude Code
+        session.
+      </p>
+      {token ? (
         <>
-          <div className="warn">
-            <p>
-              <strong>Keep this token safe — it is shown only once.</strong> It
-              is not stored by Dear Karl; if you lose it, revoke it and generate
-              a new one.
-            </p>
-          </div>
-
           <div className="copyrow">
-            <code className="mono">{created.token}</code>
+            <code className="mono">{connectCommand(token)}</code>
+            <CopyButton text={connectCommand(token)} label="Copy line" />
+          </div>
+          <p className="small">
+            The token in this line is shown only while you're here. Lost it?
+            Generate a new line and revoke the old token below.{" "}
             <button
-              className="copybtn"
+              className="linkbtn"
               type="button"
-              aria-label="Copy"
-              data-copied={copied ? "1" : undefined}
-              onClick={copyToken}
+              onClick={() => generate("Claude Code")}
+              disabled={busy}
             >
-              <CopySheetsIcon />
-              <CopyTickIcon />
+              New line
             </button>
-          </div>
-
-          <div className="btn-row">
-            <button className="btn ghost" onClick={() => setCreated(null)}>
-              Done
-            </button>
-          </div>
+          </p>
         </>
+      ) : (
+        <div className="btn-row" style={{ marginTop: 4 }}>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => generate("Claude Code")}
+            disabled={busy}
+          >
+            {busy ? "Generating…" : "Generate my token"}
+          </button>
+          <span className="small">
+            Your line appears here, with the token already in it. Tokens are
+            shown once, so each visit needs a fresh one.
+          </span>
+        </div>
       )}
 
-      <label>
-        Token name
-        <input
-          type="text"
-          value={name}
-          placeholder="e.g. Claude Code"
-          onChange={(e) => setName(e.target.value)}
-        />
-      </label>
-      <label>
-        Expires
-        <select
-          value={expiry ?? ""}
-          onChange={(e) =>
-            setExpiry(e.target.value === "" ? null : Number(e.target.value))
-          }
-        >
-          {EXPIRY_OPTIONS.map((o) => (
-            <option key={o.label} value={o.days ?? ""}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <div className="btn-row">
-        <button className="btn" onClick={generate} disabled={busy}>
-          Generate token
-        </button>
+      <h3>Let Claude Code check for new mail</h3>
+      <p className="small">
+        Once the line above works, paste this prompt into Claude Code. It sets
+        up a small hook, so every session starts by telling you what arrived
+        and checks again every {CHECK_EVERY_MINUTES} minutes while you work.
+        Claude shows you the hook before saving it, and the check only lists
+        file names; nothing is opened unless you ask.
+      </p>
+      <div className="copyrow">
+        <pre className="mono prompt">{AUTO_CHECK_PROMPT}</pre>
+        <CopyButton text={AUTO_CHECK_PROMPT} label="Copy prompt" />
       </div>
 
-      {tokens.length > 0 && (
-        <>
-          <h3>Active tokens</h3>
-          <div className="rows" style={{ marginTop: 16 }}>
-            {tokens.map((t) => (
-              <div
-                className="rowitem"
-                key={t.id}
-                style={{ alignItems: "center" }}
-              >
-                <span>
-                  <span className="v">
-                    <strong>{t.name}</strong> <code>({t.prefix}…)</code>
-                  </span>
-                  <br />
-                  <span className="small">
-                    Created {formatDate(t.createdAt)}, last used{" "}
-                    {formatDate(t.lastUsedAt)}
-                  </span>
-                </span>
-                <button
-                  className="btn ghost"
-                  onClick={() => revoke(t.id)}
-                  disabled={busy}
-                >
-                  Revoke
-                </button>
-              </div>
-            ))}
+      <h3>Claude apps (claude.ai, Desktop, mobile)</h3>
+      <p className="small">
+        Settings → Connectors → Add custom connector, with this URL. You sign in
+        with Google there; no token needed.
+      </p>
+      <div className="copyrow">
+        <code className="mono">{MCP_URL}</code>
+        <CopyButton text={MCP_URL} label="Copy URL" />
+      </div>
+
+      <h3>Personal access tokens</h3>
+      <p className="small">
+        For any other MCP client: point it at <code>{MCP_URL}</code> and send
+        the token as <code>Authorization: Bearer &lt;token&gt;</code>.
+      </p>
+
+      {created && (
+        <div className="notice">
+          <p style={{ marginBottom: ".6em" }}>
+            <b>New token “{created.name}” — shown only once.</b> Dear Karl
+            doesn't keep it. It is also in the Claude Code line above.
+          </p>
+          <div className="copyrow" style={{ marginBottom: 8 }}>
+            <code className="mono">{created.token}</code>
+            <CopyButton text={created.token} label="Copy token" />
           </div>
-        </>
+          <button
+            className="linkbtn"
+            type="button"
+            onClick={() => setCreated(null)}
+          >
+            Hide
+          </button>
+        </div>
       )}
-    </>
+
+      <form
+        className="token-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate(name.trim() || undefined, expiry ?? undefined);
+        }}
+      >
+        <label>
+          Token name
+          <input
+            type="text"
+            value={name}
+            placeholder="e.g. Cursor"
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+        <label>
+          Expires
+          <select
+            value={expiry ?? ""}
+            onChange={(e) =>
+              setExpiry(e.target.value === "" ? null : Number(e.target.value))
+            }
+          >
+            {EXPIRY_OPTIONS.map((o) => (
+              <option key={o.label} value={o.days ?? ""}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="btn ghost" type="submit" disabled={busy}>
+          Generate token
+        </button>
+      </form>
+
+      {tokens.length > 0 && (
+        <div className="rows" style={{ marginTop: 16 }}>
+          {tokens.map((t) => (
+            <div
+              className="rowitem"
+              key={t.id}
+              style={{ alignItems: "center" }}
+            >
+              <span>
+                <span className="v">
+                  <strong>{t.name}</strong> <code>({t.prefix}…)</code>
+                </span>
+                <br />
+                <span className="small">
+                  Created {formatDate(t.createdAt)}, last used{" "}
+                  {formatDate(t.lastUsedAt)}
+                </span>
+              </span>
+              <button
+                className="btn ghost btn-sm"
+                onClick={() => revoke(t.id)}
+                disabled={busy}
+              >
+                Revoke
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

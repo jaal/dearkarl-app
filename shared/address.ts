@@ -4,8 +4,9 @@
  * - prefix: which AI the address feeds; "claude" for now.
  * - name:   readable part. Suggested from the user's email, the user may change
  *           it in settings.
- * - hash:   random, set once at signup and never changed by the user. It is
- *           what makes the address hard to guess.
+ * - hash:   random, what makes the address hard to guess. Drawn at signup and
+ *           drawn again every time the user changes the address, so a
+ *           change also retires any copy of the old address in full.
  *
  * Example: olek.jaworski@gmail.com -> claude-olek.jaworski-k3m9xq@in.dearkarl.com
  *

@@ -43,13 +43,13 @@ describe("POST /api/address", () => {
     expect(res.status).toBe(401);
   });
 
-  it("changes the name and keeps prefix and hash", async () => {
-    const res = await addressHandler(post({ name: "Karl.Notes" }), noDb);
+  it("changes the name, keeps the prefix and draws a new hash", async () => {
+    const res = await addressHandler(post({ name: "Karl.Notes" }), noDb, zero);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ karlEmail: "claude-karl.notes-k3m9xq" });
+    expect(await res.json()).toEqual({ karlEmail: "claude-karl.notes-aaaaaa" });
     expect(mocks.updateLogin).toHaveBeenCalledWith(
       "olek@gmail.com",
-      "claude-karl.notes-k3m9xq",
+      "claude-karl.notes-aaaaaa",
     );
     expect(mocks.addressNameTaken).toHaveBeenCalledWith(
       "claude-karl.notes",
@@ -77,10 +77,18 @@ describe("POST /api/address", () => {
     expect(await res.json()).toEqual({ karlEmail: "claude-olek-aaaaaa" });
   });
 
-  it("does nothing when the name is unchanged", async () => {
-    const res = await addressHandler(post({ name: "olek" }), noDb);
+  it("gives a new address even when the name is unchanged", async () => {
+    const res = await addressHandler(post({ name: "olek" }), noDb, zero);
     expect(res.status).toBe(200);
-    expect(mocks.updateLogin).not.toHaveBeenCalled();
+    expect(await res.json()).toEqual({ karlEmail: "claude-olek-aaaaaa" });
+    expect(mocks.updateLogin).toHaveBeenCalledWith("olek@gmail.com", "claude-olek-aaaaaa");
+  });
+
+  it("never keeps the old hash", async () => {
+    const res = await addressHandler(post({ name: "olek" }), noDb);
+    const { karlEmail } = await res.json();
+    expect(karlEmail).toMatch(/^claude-olek-[a-z0-9]{6}$/);
+    expect(karlEmail).not.toBe(USER.login);
   });
 });
 

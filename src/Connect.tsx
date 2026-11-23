@@ -2,23 +2,15 @@ import React, { useState } from "react";
 import style from "./App.module.css";
 import { formatKarlAddress } from "./karlAddress";
 import { createApiToken } from "./server";
-import { MCP_URL } from "../shared/urls";
-
-/** Karl's MCP endpoint. A client connects to it with a Personal Access Token in
-    the Authorization header — see worker/mcp/README.md and .claude/skills/
-    dearkarl-mcp. */
-const MCP_SERVER_NAME = "dearkarl";
-
-/** Session key for the token the user generates here, so "Show it again" (back
-    on the account page) reuses the same command instead of minting a new token
-    on every visit. */
-const TOKEN_KEY = "dk_mcp_token";
-
-/** The `claude mcp add` line that wires a Claude Code session to Karl, carrying
-    the user's Personal Access Token in the Authorization header. */
-function connectCommand(token: string): string {
-  return `claude mcp add --transport http ${MCP_SERVER_NAME} ${MCP_URL} --header "Authorization: Bearer ${token}"`;
-}
+import { CopyButton } from "./CopyButton";
+import {
+  AUTO_CHECK_PROMPT,
+  CHECK_EVERY_MINUTES,
+  MCP_SERVER_NAME,
+  connectCommand,
+  readStoredToken,
+  storeToken,
+} from "./claudeCodeLine";
 
 function CopySheetsIcon() {
   return (
@@ -61,13 +53,7 @@ function Connect(props: {
   onDone: () => void;
 }): React.JSX.Element {
   const [copied, setCopied] = useState(false);
-  const [token, setToken] = useState<string | null>(() => {
-    try {
-      return sessionStorage.getItem(TOKEN_KEY);
-    } catch {
-      return null;
-    }
-  });
+  const [token, setToken] = useState<string | null>(readStoredToken);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const karlAddress = formatKarlAddress(props.karlEmail);
@@ -83,11 +69,7 @@ function Connect(props: {
       return;
     }
     setToken(result.token);
-    try {
-      sessionStorage.setItem(TOKEN_KEY, result.token);
-    } catch {
-      // Session storage may be unavailable; the token still shows this visit.
-    }
+    storeToken(result.token);
   };
 
   const copy = async () => {
@@ -126,24 +108,30 @@ function Connect(props: {
         <p className="eyebrow">Step 3 of 3</p>
         <h1>Paste this into Claude Code</h1>
 
-        <div className="copyrow">
-          <code className="mono">
-            {token
-              ? command
-              : "# Generate a token to fill your connection line."}
-          </code>
-          <button
-            className="copybtn"
-            type="button"
-            aria-label="Copy"
-            data-copied={copied ? "1" : undefined}
-            onClick={copy}
-            disabled={!token}
-          >
-            <CopySheetsIcon />
-            <CopyTickIcon />
-          </button>
-        </div>
+        {token ? (
+          <div className="copyrow">
+            <code className="mono">{command}</code>
+            <button
+              className="copybtn"
+              type="button"
+              aria-label="Copy"
+              data-copied={copied ? "1" : undefined}
+              onClick={copy}
+            >
+              <CopySheetsIcon />
+              <CopyTickIcon />
+            </button>
+          </div>
+        ) : (
+          <div className="btn-row" style={{ marginTop: 0, marginBottom: 14 }}>
+            <button className="btn" onClick={generate} disabled={busy}>
+              {busy ? "Generating…" : "Generate my token"}
+            </button>
+            <span className="small">
+              Your line appears here, with the token already in it.
+            </span>
+          </div>
+        )}
 
         {error && (
           <p role="alert" className={style.error}>
@@ -164,10 +152,22 @@ function Connect(props: {
           </p>
         )}
 
-        <p className="small">
-          Then open a new Claude Code session — it will tell you how many are
-          waiting.
-        </p>
+        {token && (
+          <>
+            <h2 style={{ marginTop: 32 }}>Then let Claude check for new mail</h2>
+            <p className="small">
+              Paste this prompt into Claude Code too. It sets up a small hook,
+              so every session starts by telling you what arrived, and checks
+              again every {CHECK_EVERY_MINUTES} minutes while you work. Claude
+              shows you the hook before saving it; the check only lists file
+              names and opens nothing unless you ask.
+            </p>
+            <div className="copyrow">
+              <pre className="mono prompt">{AUTO_CHECK_PROMPT}</pre>
+              <CopyButton text={AUTO_CHECK_PROMPT} label="Copy prompt" />
+            </div>
+          </>
+        )}
 
         <div className="notice" style={{ marginTop: 22 }}>
           <p style={{ marginBottom: ".6em" }}>
@@ -191,17 +191,11 @@ function Connect(props: {
           </ul>
         </div>
 
-        <div className="btn-row">
-          {token ? (
+        {token && (
+          <div className="btn-row">
             <button className="btn" onClick={props.onDone}>
               Done
             </button>
-          ) : (
-            <button className="btn" onClick={generate} disabled={busy}>
-              {busy ? "Generating…" : "Generate my token"}
-            </button>
-          )}
-          {token && (
             <button
               className="btn ghost"
               type="button"
@@ -210,8 +204,8 @@ function Connect(props: {
             >
               New token
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="later-note">
           <b>Keep that line safe.</b> The token in it is proof of which account
