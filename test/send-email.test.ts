@@ -17,7 +17,8 @@ describe("sendEmail", () => {
     expect(body.Content.From).toBe("karl@mail.dearkarl.com");
     expect(body.Content.ReplyTo).toBe("hi@dearkarl.com");
     expect(body.Recipients).toEqual({ To: ["user@example.com"] });
-    // No open/click tracking at Elastic.
-    expect(body.Options).toEqual({ TrackOpens: false, TrackClicks: false });
+    // Setting tracking per message makes Elastic reject the send with 400;
+    // tracking is off at the account level instead.
+    expect(body.Options).toBeUndefined();
   });
 });

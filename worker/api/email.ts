@@ -107,7 +107,6 @@ export async function emailHandler(
       filename,
       email.html ? htmlToMarkdown(email.html) : (email.text ?? "NONE"),
     );
-    await send(user.email, savedEmail());
   } catch (e: any) {
     // Only an actual authorization failure should tell the user to log in
     // again — otherwise the advice is wrong and sends them in a loop.
@@ -118,7 +117,11 @@ export async function emailHandler(
         ? signInAgainEmail()
         : couldNotSaveEmail(),
     );
+    return;
   }
+  // Outside the try: the file is already in Drive, so a failed confirmation
+  // must not turn into "I couldn't save your email".
+  await send(user.email, savedEmail());
 }
 
 export default emailHandler;
