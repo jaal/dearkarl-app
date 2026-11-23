@@ -43,7 +43,7 @@ test.describe("1. A new visitor signs up", () => {
     await page.getByRole("button", { name: "Try again" }).click();
     await page.getByRole("button", { name: "Continue with Google" }).click();
     await googleConsent(page, email);
-    await expect(page.getByRole("heading", { name: "Where your mail lands" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "This is your address" })).toBeVisible();
   });
 
   test("signs in but leaves Google's Drive box unticked: no account, asked again", async ({ page }) => {
@@ -58,7 +58,7 @@ test.describe("1. A new visitor signs up", () => {
     // "Try again" goes straight back to Google's consent.
     await page.getByRole("button", { name: "Try again" }).click();
     await googleConsent(page, email);
-    await expect(page.getByRole("heading", { name: "Where your mail lands" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "This is your address" })).toBeVisible();
   });
 });
 
@@ -129,10 +129,10 @@ test.describe("2. Mail to Karl", () => {
 
   test("after changing the address, mail to the old one is refused with the new one named", async ({ page, request }) => {
     const { email, address: oldAddress } = await signUp(page);
-    await page.getByRole("link", { name: "Change" }).click();
+    await page.getByRole("button", { name: "Change" }).click();
     const newName = `notes${Math.random().toString(36).slice(2, 6)}`;
     await page.locator("#address-name").fill(newName);
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("button", { name: "Save new address" }).click();
     await expect(page.getByText(`claude-${newName}-`)).toBeVisible();
     const newAddress = (await page.locator(".mono-inline", { hasText: `claude-${newName}-` }).first().innerText()).trim();
 
@@ -321,9 +321,6 @@ test.describe("6. The site around it", () => {
     await page.getByRole("button", { name: "Continue with Google" }).click();
     await googleConsent(page, newEmail());
     const leftovers = /inert in this mock|lorem|TODO|bounces/i;
-    await expect(page.getByRole("heading", { name: "Where your mail lands" })).toBeVisible();
-    await expect(page.locator("main")).not.toContainText(leftovers);
-    await page.getByRole("button", { name: "Next", exact: true }).click();
     await expect(page.getByRole("heading", { name: "This is your address" })).toBeVisible();
     await expect(page.locator("main")).not.toContainText(leftovers);
     await page.getByRole("button", { name: "Next: connect Claude Code" }).click();

@@ -17,8 +17,9 @@ import { getPayload, getSid } from "./utils";
 
 /**
  * `POST /api/address` with `{ name }`: changes the readable part of the
- * signed-in user's Karl address. The prefix and the hash stay as they are.
- * A user whose login predates the `prefix-name-hash` format gets a fresh hash.
+ * signed-in user's Karl address. The prefix stays; the hash is drawn again,
+ * so saving always gives a new address (even with the same name) and
+ * nobody who knew the old one can guess the new one.
  *
  * The old address stops working at once: mail to it gets the
  * "wrong address" reply, which names the new one.
@@ -48,18 +49,16 @@ export async function addressHandler(
 
   const current = parseLocalPart(user.login ?? "");
   const prefix = current?.prefix ?? DEFAULT_PREFIX;
-  const hash = current?.hash ?? randomHash(randomInt);
+  const hash = randomHash(randomInt);
   const login = buildLocalPart(prefix, check.name, hash);
 
-  if (login !== user.login) {
-    if (await usersDb.addressNameTaken(`${prefix}-${check.name}`, user.email))
-      return new ErrorResponse(ApiErrors.AddressTaken);
-    try {
-      await usersDb.updateLogin(user.email, login);
-    } catch {
-      // UNIQUE(login) lost a race with another user.
-      return new ErrorResponse(ApiErrors.AddressTaken);
-    }
+  if (await usersDb.addressNameTaken(`${prefix}-${check.name}`, user.email))
+    return new ErrorResponse(ApiErrors.AddressTaken);
+  try {
+    await usersDb.updateLogin(user.email, login);
+  } catch {
+    // UNIQUE(login) lost a race with another user.
+    return new ErrorResponse(ApiErrors.AddressTaken);
   }
 
   const body: ChangeAddressResponse = { karlEmail: login };

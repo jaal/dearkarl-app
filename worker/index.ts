@@ -10,6 +10,7 @@ import { diagErrorSubject } from "./api/messages";
 import { mcpHandler } from "./mcp/handler";
 import { handleStub, installStubForEmail } from "./dev/stub";
 import { emailLoginHandler, isEmailLoginPath } from "./api/emailLogin";
+import { driveFolderHandler } from "./api/driveFolder";
 
 // /k/* is the first-party path to PostHog's EU cloud (src/analytics.ts):
 // /k/static/* to the assets host (lazily loaded parts of posthog-js),
@@ -64,6 +65,9 @@ async function appFetch(request: Request, env: Env, ctx: ExecutionContext): Prom
     if (url.pathname === "/authorize") return await authorizeHandler(request, env);
     if (isEmailLoginPath(url)) {
       return await emailLoginHandler(request, env);
+    }
+    if (url.pathname === ApiPaths.driveFolder) {
+      return await driveFolderHandler(request, secret, env.DB);
     }
     if (url.pathname === ApiPaths.accountDelete && request.method === "POST") {
       // Whoever deletes their account also cuts off every Claude connector.

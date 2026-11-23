@@ -6,9 +6,11 @@ import { CopyButton } from "./CopyButton";
 import { changeAddressName } from "./server";
 import { KARL_ADDRESS_DOMAIN } from "./karlAddress";
 import { parseLocalPart } from "../shared/address";
+import { ApiPaths } from "../shared/api";
 
-/** Inline editor for the readable part of the address. The prefix and the
-    hash are shown but cannot be edited. */
+/** Inline editor for the address, shown in place of the address row's value.
+    The prefix stays; the readable part is the user's; the ending is drawn
+    again on save, so the new address can't be guessed from the old one. */
 function AddressEditor(props: {
   karlEmail: string;
   onSaved: (karlEmail: string) => void;
@@ -30,43 +32,54 @@ function AddressEditor(props: {
   };
 
   return (
-    <form onSubmit={save} style={{ marginTop: 8 }}>
-      <label className="small" htmlFor="address-name">
-        Change the readable part. {parsed ? "The ending stays" : "A random ending is added"} so
-        the address stays hard to guess.
+    <form className="address-editor" onSubmit={save}>
+      <label htmlFor="address-name" className="visually-hidden">
+        Readable part of your address
       </label>
-      <div className="mono-inline" style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", marginTop: 4 }}>
-        <span>{parsed?.prefix ?? "claude"}-</span>
+      <div className="address-field">
+        <span className="fixed">{parsed?.prefix ?? "claude"}-</span>
         <input
           id="address-name"
+          type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={32}
           autoComplete="off"
+          autoCapitalize="none"
           spellCheck={false}
+          autoFocus
           required
+          size={Math.max(8, name.length + 1)}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? "address-error" : undefined}
+          aria-describedby={error ? "address-error address-help" : "address-help"}
         />
-        <span>
-          -{parsed?.hash ?? "xxxxxx"}@{KARL_ADDRESS_DOMAIN}
+        <span className="fixed" title="A new random ending is drawn when you save">
+          -<span className="new-hash">••••••</span>@{KARL_ADDRESS_DOMAIN}
         </span>
       </div>
-      <p className="small">
-        Your current address stops working as soon as you save. Update any
-        forwarding rules that use it.
-      </p>
       {error && (
         <p id="address-error" role="alert" className={style.error}>
           {error}
         </p>
       )}
-      <button className="btn" type="submit" disabled={saving}>
-        {saving ? "Saving…" : "Save"}
-      </button>{" "}
-      <button className="btn ghost" type="button" onClick={props.onCancel} disabled={saving}>
-        Cancel
-      </button>
+      <p id="address-help" className="small">
+        Saving gives you a new address with a new random ending (•••••• above),
+        so it stays hard to guess. The current one stops working at once —
+        update any forwarding rules that use it.
+      </p>
+      <div className="btn-row" style={{ marginTop: 12 }}>
+        <button className="btn btn-sm" type="submit" disabled={saving}>
+          {saving ? "Saving…" : "Save new address"}
+        </button>
+        <button
+          className="btn ghost btn-sm"
+          type="button"
+          onClick={props.onCancel}
+          disabled={saving}
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
@@ -80,7 +93,6 @@ function Account(props: {
   driveConnected?: boolean;
   error?: string;
   busy?: boolean;
-  onShowConnect: () => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
   onAddressChanged: (karlEmail: string) => void;
@@ -133,57 +145,40 @@ function Account(props: {
       )}
 
       <div className="rows" style={{ marginTop: 24 }}>
-        <div className="rowitem">
+        <div className={editingAddress ? "rowitem editing" : "rowitem"}>
           <span className="k">Your address</span>
-          <span className="v">
-            <span className="mono-inline">{karlAddress}</span>{" "}
-            <CopyButton text={karlAddress} label="Copy address" inline />{" "}
-            {!editingAddress && (
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setEditingAddress(true);
-                }}
+          {editingAddress ? (
+            <AddressEditor
+              karlEmail={props.karlEmail}
+              onSaved={(login) => {
+                props.onAddressChanged(login);
+                setEditingAddress(false);
+              }}
+              onCancel={() => setEditingAddress(false)}
+            />
+          ) : (
+            <span className="v address-value">
+              <span className="mono-inline">{karlAddress}</span>
+              <CopyButton text={karlAddress} label="Copy address" inline />
+              <button
+                className="btn ghost btn-sm"
+                type="button"
+                onClick={() => setEditingAddress(true)}
               >
                 Change
-              </a>
-            )}
-          </span>
+              </button>
+            </span>
+          )}
         </div>
-        {editingAddress && (
-          <AddressEditor
-            karlEmail={props.karlEmail}
-            onSaved={(login) => {
-              props.onAddressChanged(login);
-              setEditingAddress(false);
-            }}
-            onCancel={() => setEditingAddress(false)}
-          />
-        )}
         <div className="rowitem">
           <span className="k">Your Drive folder</span>
           <span className="v">
             <a
-              href="https://drive.google.com/"
+              href={ApiPaths.driveFolder}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener"
             >
               Open in Drive ↗
-            </a>
-          </span>
-        </div>
-        <div className="rowitem">
-          <span className="k">Claude Code line</span>
-          <span className="v">
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                props.onShowConnect();
-              }}
-            >
-              Show it again
             </a>
           </span>
         </div>

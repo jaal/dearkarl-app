@@ -18,6 +18,7 @@ export const ApiPaths = {
   tokensRevoke: api("tokens/revoke"),
   address: api("address"),
   accountDelete: api("account/delete"),
+  driveFolder: api("drive/folder"),
   session: api("session"),
   loginEmail: api("login/email"),
   loginVerify: api("login/verify"),

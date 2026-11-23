@@ -12,7 +12,6 @@ import {
 import Account from "./Account";
 import Address from "./Address";
 import Connect from "./Connect";
-import Destination from "./Destination";
 import SignInRefused from "./SignInRefused";
 import Reconnect from "./Reconnect";
 import Base from "./marketing/Base";
@@ -22,7 +21,7 @@ function navigateTo(url: string) {
   window.location.href = url;
 }
 
-// Where a signed-in user lands. Onboarding (destination → address → connect)
+// Where a signed-in user lands. Onboarding (address → connect)
 // runs only right after the sign-in that created the account; everyone else —
 // a returning user, a new tab, a reconnect — goes straight to the account page.
 const STAGE_KEY = "dk_flow_stage";
@@ -46,11 +45,14 @@ const SIGNIN_FAILED_MESSAGE =
 const DRIVE_MISSING_MESSAGE =
   "Google didn't give Karl access to your Drive folder. Try again and tick the Drive box on Google's screen.";
 
-type Stage = "destination" | "address" | "connect" | "account";
+type Stage = "address" | "connect" | "account";
 
 function readStage(): Stage {
   try {
-    return sessionStorage.getItem(STAGE_KEY) === "destination" ? "destination" : "account";
+    // "destination" is the old first step (Drive was the only choice, so it
+    // went); a tab still holding it just starts at the address.
+    const stored = sessionStorage.getItem(STAGE_KEY);
+    return stored === "address" || stored === "destination" ? "address" : "account";
   } catch {
     return "account";
   }
@@ -250,7 +252,7 @@ function App(props: {
     }
     // A brand-new account runs onboarding; an existing one (including a
     // reconnect) goes to the account page.
-    writeSession(STAGE_KEY, profile.isNewUser ? "destination" : "account");
+    writeSession(STAGE_KEY, profile.isNewUser ? "address" : "account");
     if (reconnecting) writeSession(RECONNECTED_KEY, "1");
     setBusy(false);
     navigateTo("/app");
@@ -447,8 +449,6 @@ function App(props: {
             </p>
             </>
           )
-        ) : stage === "destination" ? (
-          <Destination onNext={() => setStage("address")} />
         ) : stage === "address" ? (
           <Address
             karlEmail={karlEmail}
@@ -469,7 +469,6 @@ function App(props: {
             driveConnected={driveConnected}
             error={error}
             busy={busy}
-            onShowConnect={() => setStage("connect")}
             onLogout={logoutGoogle}
             onDeleteAccount={deleteAccountGoogle}
             onAddressChanged={setKarlEmail}

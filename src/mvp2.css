@@ -308,3 +308,64 @@ select { appearance: none;
   width: 28px; height: 28px; margin: 0 6px 0 2px;
 }
 .copybtn.copybtn-inline svg { width: 13px; height: 13px; }
+
+/* ---------- small buttons, link-styled buttons ---------- */
+.btn.btn-sm, .dk .btn.btn-sm { padding: 6px 16px; font-size: .82rem; gap: 6px; }
+.dk .rowitem .btn.btn-sm { flex: 0 0 auto; width: auto; }
+/* keep a long line (the Claude Code one) clear of the copy button */
+.dk .copyrow .mono { padding-right: 62px; }
+.linkbtn {
+  background: none; border: 0; padding: 0; font: inherit; color: var(--ink);
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.linkbtn:disabled { color: var(--muted); cursor: default; }
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ---------- account: address row ---------- */
+/* address, copy and Change sit on one centred line; the address is mono so
+   it reads like the thing you paste, not like a heading */
+.rowitem .address-value {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  justify-content: flex-end; min-width: 0;
+}
+.rowitem .address-value .mono-inline {
+  font: 500 .95rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  word-break: break-all;
+}
+.rowitem .address-value .copybtn-inline { margin: 0; }
+.rowitem:has(.address-value) { align-items: center; }
+/* while editing, the editor takes the whole row under the label */
+.rowitem.editing { flex-direction: column; align-items: stretch; }
+.address-editor { width: 100%; }
+.address-field {
+  display: flex; align-items: center; flex-wrap: wrap;
+  font: 500 .95rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--sunk); padding: 10px 12px; margin: 4px 0 10px;
+}
+.address-field .fixed { color: var(--muted); white-space: nowrap; }
+.address-field input[type="text"] {
+  font: inherit; width: auto; min-width: 6ch; max-width: 100%;
+  padding: 4px 6px; margin: 0 2px;
+}
+.address-field .new-hash { letter-spacing: .08em; }
+
+/* ---------- connect Claude ---------- */
+.token-form {
+  display: grid; grid-template-columns: 1fr 12rem auto; gap: 12px;
+  align-items: end; margin-top: 8px;
+}
+.token-form label { margin: 0; }
+.token-form .btn { padding: 10px 22px; }
+@media (max-width: 640px) {
+  .token-form { grid-template-columns: 1fr; }
+}
+
+/* a multi-line prompt to paste: keep its line breaks, scroll rather than
+   push the page when it is long */
+.dk .copyrow .mono.prompt {
+  white-space: pre-wrap; word-break: normal; overflow-wrap: anywhere;
+  max-height: 18rem; overflow: auto; margin: 0; font-size: .85rem;
+}

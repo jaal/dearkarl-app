@@ -99,9 +99,6 @@ export async function signUp(page: Page, email = newEmail()): Promise<NewAccount
   await page.getByRole("button", { name: "Continue with Google" }).click();
   await googleConsent(page, email);
 
-  await expect(page.getByRole("heading", { name: "Where your mail lands" })).toBeVisible();
-  await page.getByRole("button", { name: "Next", exact: true }).click();
-
   await expect(page.getByRole("heading", { name: "This is your address" })).toBeVisible();
   const address = (await page.locator("code.address").innerText()).trim();
   expect(address).toMatch(/^claude-[a-z0-9.]+-[a-z0-9]{6}@in\.dearkarl\.com$/);
