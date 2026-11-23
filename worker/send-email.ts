@@ -54,10 +54,10 @@ async function sendEmail(
         },
       ],
     },
-    // No open pixel, no rewritten links: Elastic would otherwise record who
-    // opened Karl's mail and what they clicked. The privacy notice promises
-    // we don't track; this makes it true at the sender.
-    Options: { TrackOpens: false, TrackClicks: false },
+    // No `Options: {TrackOpens, TrackClicks}` here: this Elastic account
+    // rejects every send that sets them (400 "You cannot change the tracking
+    // options"), which silently killed all of Karl's mail. Open/click
+    // tracking is switched off in the Elastic account settings instead.
   };
 
   const res = await fetch("https://api.elasticemail.com/v4/emails/transactional", {
