@@ -110,7 +110,12 @@ export async function signUp(page: Page, email = newEmail()): Promise<NewAccount
   const line = page.locator("code.mono", { hasText: "claude mcp add" });
   await expect(line).toBeVisible();
   const token = /Bearer ([^"\s]+)/.exec(await line.innerText())![1];
-  await page.getByRole("button", { name: "Done" }).click();
+  // The line points at the page's own origin and works in every project.
+  expect(await line.innerText()).toContain("--scope user");
+  expect(await line.innerText()).toContain(`${new URL(page.url()).origin}/mcp`);
+  await page.getByRole("button", { name: "Next: check for new mail" }).click();
+  await expect(page.getByRole("heading", { name: "Let Claude check for new mail" })).toBeVisible();
+  await page.getByRole("button", { name: "Skip for now" }).click();
 
   await expect(page.getByRole("heading", { name: "Your account" })).toBeVisible();
   return { email, address, token };

@@ -1,4 +1,5 @@
 import React from "react";
+import { Steps } from "./Steps";
 
 /** The self-hosting guide; the home page links the same place. */
 const SELF_HOST_URL = "https://github.com/jaal/dearkarl";
@@ -11,24 +12,7 @@ function SignInRefused(props: {
 }): React.JSX.Element {
   return (
     <>
-      <nav className="steps" aria-label="Progress">
-        <ol>
-          <li className="on">
-            <span className="n">1</span>
-            <span>Sign in</span>
-          </li>
-          <li className="sep" aria-hidden="true" />
-          <li>
-            <span className="n">2</span>
-            <span>Your address</span>
-          </li>
-          <li className="sep" aria-hidden="true" />
-          <li>
-            <span className="n">3</span>
-            <span>Connect Claude Code</span>
-          </li>
-        </ol>
-      </nav>
+      <Steps current={1} />
 
       <div className="card narrow">
         {props.driveUnticked ? (

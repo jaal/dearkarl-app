@@ -1,11 +1,9 @@
 import React, { useState } from "react";
+import { STEP_COUNT, Steps } from "./Steps";
 import style from "./App.module.css";
 import { formatKarlAddress } from "./karlAddress";
 import { createApiToken } from "./server";
-import { CopyButton } from "./CopyButton";
 import {
-  AUTO_CHECK_PROMPT,
-  CHECK_EVERY_MINUTES,
   MCP_SERVER_NAME,
   connectCommand,
   readStoredToken,
@@ -50,7 +48,7 @@ function CopyTickIcon() {
 function Connect(props: {
   karlEmail: string;
   userEmail: string;
-  onDone: () => void;
+  onNext: () => void;
 }): React.JSX.Element {
   const [copied, setCopied] = useState(false);
   const [token, setToken] = useState<string | null>(readStoredToken);
@@ -85,27 +83,10 @@ function Connect(props: {
 
   return (
     <>
-      <nav className="steps" aria-label="Progress">
-        <ol>
-          <li className="done">
-            <span className="n">1</span>
-            <span>Sign in</span>
-          </li>
-          <li className="sep" aria-hidden="true" />
-          <li className="done">
-            <span className="n">2</span>
-            <span>Your address</span>
-          </li>
-          <li className="sep" aria-hidden="true" />
-          <li className="on">
-            <span className="n">3</span>
-            <span>Connect Claude Code</span>
-          </li>
-        </ol>
-      </nav>
+      <Steps current={3} />
 
       <div className="card narrow">
-        <p className="eyebrow">Step 3 of 3</p>
+        <p className="eyebrow">Step 3 of {STEP_COUNT}</p>
         <h1>Paste this into Claude Code</h1>
 
         {token ? (
@@ -152,23 +133,6 @@ function Connect(props: {
           </p>
         )}
 
-        {token && (
-          <>
-            <h2 style={{ marginTop: 32 }}>Then let Claude check for new mail</h2>
-            <p className="small">
-              Paste this prompt into Claude Code too. It sets up a small hook,
-              so every session starts by telling you what arrived, and checks
-              again every {CHECK_EVERY_MINUTES} minutes while you work. Claude
-              shows you the hook before saving it; the check only lists file
-              names and opens nothing unless you ask.
-            </p>
-            <div className="copyrow">
-              <pre className="mono prompt">{AUTO_CHECK_PROMPT}</pre>
-              <CopyButton text={AUTO_CHECK_PROMPT} label="Copy prompt" />
-            </div>
-          </>
-        )}
-
         <div className="notice" style={{ marginTop: 22 }}>
           <p style={{ marginBottom: ".6em" }}>
             <b>What you just set up</b>
@@ -193,8 +157,8 @@ function Connect(props: {
 
         {token && (
           <div className="btn-row">
-            <button className="btn" onClick={props.onDone}>
-              Done
+            <button className="btn" onClick={props.onNext}>
+              Next: check for new mail
             </button>
             <button
               className="btn ghost"

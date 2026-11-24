@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { STEP_COUNT, Steps } from "./Steps";
 import style from "./App.module.css";
 import {
   deleteAccount,
@@ -12,6 +13,7 @@ import {
 import Account from "./Account";
 import Address from "./Address";
 import Connect from "./Connect";
+import CheckForMail from "./CheckForMail";
 import SignInRefused from "./SignInRefused";
 import Reconnect from "./Reconnect";
 import Base from "./marketing/Base";
@@ -21,7 +23,7 @@ function navigateTo(url: string) {
   window.location.href = url;
 }
 
-// Where a signed-in user lands. Onboarding (address → connect)
+// Where a signed-in user lands. Onboarding (address → connect → checkmail)
 // runs only right after the sign-in that created the account; everyone else —
 // a returning user, a new tab, a reconnect — goes straight to the account page.
 const STAGE_KEY = "dk_flow_stage";
@@ -45,7 +47,7 @@ const SIGNIN_FAILED_MESSAGE =
 const DRIVE_MISSING_MESSAGE =
   "Google didn't give Karl access to your Drive folder. Try again and tick the Drive box on Google's screen.";
 
-type Stage = "address" | "connect" | "account";
+type Stage = "address" | "connect" | "checkmail" | "account";
 
 function readStage(): Stage {
   try {
@@ -352,27 +354,10 @@ function App(props: {
                   </p>
                 </div>
               )}
-              <nav className="steps" aria-label="Progress">
-                <ol>
-                  <li className="on">
-                    <span className="n">1</span>
-                    <span>Sign in</span>
-                  </li>
-                  <li className="sep" aria-hidden="true" />
-                  <li>
-                    <span className="n">2</span>
-                    <span>Your address</span>
-                  </li>
-                  <li className="sep" aria-hidden="true" />
-                  <li>
-                    <span className="n">3</span>
-                    <span>Connect Claude Code</span>
-                  </li>
-                </ol>
-              </nav>
+              <Steps current={1} />
 
             <div className="card narrow">
-              <p className="eyebrow">Step 1 of 3</p>
+              <p className="eyebrow">Step 1 of {STEP_COUNT}</p>
               <h1>Sign in with Google</h1>
               <p className="lede">
                 One approval covers everything. Karl uses it to write mail into a
@@ -459,8 +444,10 @@ function App(props: {
           <Connect
             karlEmail={karlEmail}
             userEmail={userEmail}
-            onDone={goToAccount}
+            onNext={() => setStage("checkmail")}
           />
+        ) : stage === "checkmail" ? (
+          <CheckForMail onDone={goToAccount} />
         ) : (
           <Account
             karlEmail={karlEmail}

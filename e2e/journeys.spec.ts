@@ -257,6 +257,39 @@ test.describe("4. Google access is lost", () => {
 });
 
 test.describe("5. Tokens and leaving", () => {
+  test("step 4 waits for Claude Code, and 'Reveal anyway' shows the prompt without it", async ({ page, request }) => {
+    await page.goto("/app");
+    await page.getByRole("button", { name: "Continue with Google" }).click();
+    await googleConsent(page, newEmail());
+    await page.getByRole("button", { name: "Next: connect Claude Code" }).click();
+    await page.getByRole("button", { name: "Generate my token" }).click();
+    const token = /Bearer ([^"\s]+)/.exec(await page.locator("code.mono", { hasText: "claude mcp add" }).innerText())![1];
+    await page.getByRole("button", { name: "Next: check for new mail" }).click();
+
+    await expect(page.getByText("Waiting for Claude Code to connect")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Copy prompt" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Reveal anyway" }).click();
+    await expect(page.getByRole("button", { name: "Copy prompt" })).toBeVisible();
+    await expect(page.getByText("Not connected yet")).toBeVisible();
+
+    // Connecting later still flips the status.
+    expect((await mcp(request, token, "tools/list")).status).toBe(200);
+    await expect(page.getByText("Claude Code is connected to dearkarl.")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "Done" }).click();
+    await expect(page.getByRole("heading", { name: "Your account" })).toBeVisible();
+  });
+
+  test("the check-for-mail prompt appears only once Claude Code has connected", async ({ page, request }) => {
+    const { token } = await signUp(page);
+    await expect(page.getByText("Waiting for Claude Code to connect")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Copy prompt" })).toHaveCount(0);
+
+    // What Claude Code does when a session starts with the line installed.
+    expect((await mcp(request, token, "tools/list")).status).toBe(200);
+    await expect(page.getByText("Claude Code is connected to dearkarl.")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: "Copy prompt" })).toBeVisible();
+  });
+
   test("a revoked Claude Code token stops working at once", async ({ page, request }) => {
     const { token } = await signUp(page);
     expect((await mcp(request, token, "tools/list")).status).toBe(200);

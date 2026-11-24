@@ -369,3 +369,7 @@ select { appearance: none;
   white-space: pre-wrap; word-break: normal; overflow-wrap: anywhere;
   max-height: 18rem; overflow: auto; margin: 0; font-size: .85rem;
 }
+
+/* waiting for Claude Code to reach /mcp before showing the hook prompt */
+.autocheck .notice.waiting .status { margin-bottom: 8px; }
+.autocheck > .status { margin: 4px 0 8px; }
