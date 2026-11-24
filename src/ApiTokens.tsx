@@ -2,12 +2,11 @@ import React, { useEffect, useState } from "react";
 import style from "./App.module.css";
 import type { ApiTokenCreated, ApiTokenSummary } from "./server";
 import { createApiToken, listApiTokens, revokeApiToken } from "./server";
-import { MCP_URL } from "../shared/urls";
 import { CopyButton } from "./CopyButton";
+import { AutoCheck } from "./AutoCheck";
 import {
-  AUTO_CHECK_PROMPT,
-  CHECK_EVERY_MINUTES,
   connectCommand,
+  mcpUrl,
   readStoredToken,
   storeToken,
 } from "./claudeCodeLine";
@@ -134,18 +133,10 @@ export function ApiTokens(): React.JSX.Element {
         </div>
       )}
 
-      <h3>Let Claude Code check for new mail</h3>
-      <p className="small">
-        Once the line above works, paste this prompt into Claude Code. It sets
-        up a small hook, so every session starts by telling you what arrived
-        and checks again every {CHECK_EVERY_MINUTES} minutes while you work.
-        Claude shows you the hook before saving it, and the check only lists
-        file names; nothing is opened unless you ask.
-      </p>
-      <div className="copyrow">
-        <pre className="mono prompt">{AUTO_CHECK_PROMPT}</pre>
-        <CopyButton text={AUTO_CHECK_PROMPT} label="Copy prompt" />
-      </div>
+      <AutoCheck
+        heading={<h3>Let Claude Code check for new mail</h3>}
+        onConnected={refresh}
+      />
 
       <h3>Claude apps (claude.ai, Desktop, mobile)</h3>
       <p className="small">
@@ -153,13 +144,13 @@ export function ApiTokens(): React.JSX.Element {
         with Google there; no token needed.
       </p>
       <div className="copyrow">
-        <code className="mono">{MCP_URL}</code>
-        <CopyButton text={MCP_URL} label="Copy URL" />
+        <code className="mono">{mcpUrl()}</code>
+        <CopyButton text={mcpUrl()} label="Copy URL" />
       </div>
 
       <h3>Personal access tokens</h3>
       <p className="small">
-        For any other MCP client: point it at <code>{MCP_URL}</code> and send
+        For any other MCP client: point it at <code>{mcpUrl()}</code> and send
         the token as <code>Authorization: Bearer &lt;token&gt;</code>.
       </p>
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { STEP_COUNT, Steps } from "./Steps";
 import { CopyButton } from "./CopyButton";
 import { formatKarlAddress } from "./karlAddress";
 
@@ -12,27 +13,10 @@ function Address(props: {
 
   return (
     <>
-      <nav className="steps" aria-label="Progress">
-        <ol>
-          <li className="done">
-            <span className="n">1</span>
-            <span>Sign in</span>
-          </li>
-          <li className="sep" aria-hidden="true" />
-          <li className="on">
-            <span className="n">2</span>
-            <span>Your address</span>
-          </li>
-          <li className="sep" aria-hidden="true" />
-          <li>
-            <span className="n">3</span>
-            <span>Connect Claude Code</span>
-          </li>
-        </ol>
-      </nav>
+      <Steps current={2} />
 
       <div className="card narrow">
-        <p className="eyebrow">Step 2 of 3</p>
+        <p className="eyebrow">Step 2 of {STEP_COUNT}</p>
         <h1>This is your address</h1>
 
         <div className="copyrow">

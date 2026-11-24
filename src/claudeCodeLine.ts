@@ -8,10 +8,20 @@ export const MCP_SERVER_NAME = "dearkarl";
     (only while that token is still active). */
 export const TOKEN_KEY = "dk_mcp_token";
 
-/** The `claude mcp add` line that wires a Claude Code session to Karl,
-    carrying a Personal Access Token in the Authorization header. */
+/** Where MCP clients connect: /mcp on the origin this page came from, so a
+    local or preview copy hands out a line that points at itself (its tokens
+    exist only there). Falls back to production outside a browser. */
+export function mcpUrl(): string {
+  return typeof window !== "undefined" && window.location?.origin
+    ? `${window.location.origin}/mcp`
+    : MCP_URL;
+}
+
+/** The `claude mcp add` line that wires Claude Code to Karl, carrying a
+    Personal Access Token in the Authorization header. `--scope user` makes
+    it work in every project, not just the folder the line was pasted in. */
 export function connectCommand(token: string): string {
-  return `claude mcp add --transport http ${MCP_SERVER_NAME} ${MCP_URL} --header "Authorization: Bearer ${token}"`;
+  return `claude mcp add --transport http --scope user ${MCP_SERVER_NAME} ${mcpUrl()} --header "Authorization: Bearer ${token}"`;
 }
 
 export function readStoredToken(): string | null {
@@ -44,6 +54,7 @@ export const AUTO_CHECK_PROMPT = `Set up automatic checks of my dearkarl inbox i
 
 dearkarl is an MCP server I already added (name "dearkarl", tools list_files and read_file). Each file in it is an email I forwarded to my AI.
 
+0. First call list_files on dearkarl to make sure it is connected. If that fails, stop here and tell me to run the "claude mcp add" line from my dearkarl account page and start a new session.
 1. Write ~/.claude/hooks/dearkarl-check.sh. It takes an optional argument "prompt" and prints instructions for you (it never calls dearkarl itself):
    - Keep the time of the last check in ~/.claude/dearkarl-last-check (ISO 8601 UTC). Read it, then overwrite it with the current time. If the file doesn't exist, use 7 days ago.
    - Without an argument (session start): print "dearkarl: call list_files on the dearkarl MCP server. In one line, tell me how many files have modifiedTime after <last check> and list their names. If there are none, say nothing."
