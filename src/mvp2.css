@@ -10,7 +10,7 @@
    the browser so, which also keeps form controls and scrollbars light for
    someone whose OS is dark.
 
-   No webfonts, no analytics, no third-party requests. The product's claim is
+   No webfonts, no third-party requests, analytics only after a yes. The product's claim is
    that it doesn't watch you; the pages shouldn't either. */
 
 :root {
