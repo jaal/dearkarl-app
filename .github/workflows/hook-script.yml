@@ -38,3 +38,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: bash --version | head -1 && date --version 2>/dev/null | head -1 || echo "BSD date"
       - run: pnpm exec vitest run test/dearkarl-check-script.test.ts
+
+  # ubuntu-latest now ships uutils date; Debian still has GNU coreutils,
+  # which is what most Linux machines run.
+  gnu-coreutils:
+    runs-on: ubuntu-latest
+    container: node:22-bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable && pnpm install --frozen-lockfile
+      - run: bash --version | head -1 && date --version | head -1
+      - run: pnpm exec vitest run test/dearkarl-check-script.test.ts
