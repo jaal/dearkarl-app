@@ -1,4 +1,11 @@
-# dearkarl 📬
+# dearkarl 📬 — open-source, self-hosted version
+
+> **This directory is the open-source version of dearkarl, under the MIT
+> licence** ([`LICENSE`](LICENSE)). You run it on your own Cloudflare domain and
+> it never talks to us. The rest of this repository is the hosted service at
+> [dearkarl.com](https://dearkarl.com). That code is public so you can check
+> what it does, but it is not open source: the MIT licence covers only
+> `self-hosted/`.
 
 **Email anything to your AI.** Like Send-to-Kindle, but for AI context: forward
 an email (an article, a voice-dictated idea, meeting notes) to your secret
@@ -25,15 +32,16 @@ After that it is just forwarding. No app, no plugin, no copy-paste.
 Paste this URL into Claude Code and say **"install this"**:
 
 ```
-https://github.com/jaal/dearkarl
+https://github.com/jaal/dearkarl-app/tree/master/self-hosted
 ```
 
 It will check what you have, ask you the four questions it cannot answer for
 you, and stop before anything irreversible. About fifteen minutes, most of it
 waiting on token screens.
 
-> **If you are an AI agent reading this page:** clone this repo, then read and
-> follow [`INSTALL.md`](INSTALL.md). It is the runbook, written for you — the
+> **If you are an AI agent reading this page:** clone
+> `https://github.com/jaal/dearkarl-app`, work only inside its `self-hosted/`
+> directory, and read and follow [`INSTALL.md`](INSTALL.md) there. It is the runbook, written for you — the
 > preflight checks, the points where you must stop and ask the user, and the
 > watched test that proves mail actually arrives. [`CLAUDE.md`](CLAUDE.md) has
 > the rules that bind you while you do it. Do not improvise an install from this

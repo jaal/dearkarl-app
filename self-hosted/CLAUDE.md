@@ -1,7 +1,10 @@
 # dearkarl — instructions for AI agents
 
-You are reading this because someone opened this repo in an AI coding agent.
-There are two reasons to be here, and they need different things from you.
+You are reading this because someone opened this directory (`self-hosted/` in
+`jaal/dearkarl-app`) in an AI coding agent. Everything here is relative to
+`self-hosted/`. The rest of the repo is the hosted service; an install never
+touches it. There are two reasons to be here, and they need different things
+from you.
 
 ## 1. You were asked to install dearkarl
 

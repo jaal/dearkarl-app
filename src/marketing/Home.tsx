@@ -53,6 +53,15 @@ const FAQ = [
         and it exists only after you sign in.</p>`,
   },
   {
+    q: "Is the code public?",
+    a: `<p>Yes, all of it, in one repository:
+        <a href="${SITE.repo}">github.com/jaal/dearkarl-app</a>.</p>
+        <p>The <a href="${SITE.selfHost}">self-hosted version</a> is open source under the MIT
+        licence: run it on your own Cloudflare account, change it, share it. The code behind
+        dearkarl.com is there too, so you can check every promise on this page against what
+        actually runs. That part is public to read, not open source.</p>`,
+  },
+  {
     q: 'Why "Karl"?',
     a: `<p>Because it tells you how to use it: <em>just email it to Karl.</em></p>
         <p>Karl is the mailman. He always delivers — and he never reads your post and never
@@ -217,7 +226,7 @@ export default function Home(): React.JSX.Element {
           trust. You need a domain on Cloudflare (about $10 a year), a GitHub
           account, and about fifteen minutes with Claude Code.
         </p>
-        <a className="btn ghost sm" href="https://github.com/jaal/dearkarl">
+        <a className="btn ghost sm" href={SITE.selfHost}>
           Self-host it free →
         </a>
       </div>

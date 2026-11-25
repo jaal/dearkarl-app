@@ -94,11 +94,11 @@ Marta is invented. Her clients, her mother and her partner write to her too, and
 **Forward only the email you mean to share.** That is what dearkarl does. dearkarl is an email-to-AI pipe: forward any email to your own secret address and it lands as a plain markdown file your next Claude Code session can read.
 
 - **It never asks for your mailbox.** It only sees what you forwarded.
-- **The address is a secret,** and a sender allowlist in the Worker bounces everyone else. The allowlist checks the address a message claims; a [DMARC check](https://github.com/jaal/dearkarl#the-allowlist-alone-proves-nothing) verifies it came from that domain, and logs its verdict until you set it to block.
+- **The address is a secret,** and a sender allowlist in the Worker bounces everyone else. The allowlist checks the address a message claims; a [DMARC check](https://github.com/jaal/dearkarl-app/tree/master/self-hosted#the-allowlist-alone-proves-nothing) verifies it came from that domain, and logs its verdict until you set it to block.
 - **Mail is stored as data, never as instructions,** inside a fence the AI is told not to obey.
 - **You host it yourself:** your domain on Cloudflare (a subdomain works), your private GitHub repo. MIT licensed, about 15 minutes to install with Claude Code.
 
-The code is on [GitHub](https://github.com/jaal/dearkarl). A hosted version, with no domain needed, is not open yet; the waitlist is on [dearkarl.com](https://dearkarl.com).
+The code is on [GitHub](https://github.com/jaal/dearkarl-app/tree/master/self-hosted). A hosted version, with no domain needed, is not open yet; the waitlist is on [dearkarl.com](https://dearkarl.com).
 
 ## How can you check your own setup?
 
@@ -149,7 +149,7 @@ As of October 2026 there is no address at Anthropic you can send mail to. Every 
 | [Gmail connector](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors) | Your whole Gmail mailbox: it searches and reads it, and can draft, send and forward (asking first, by default) | A few clicks, on any plan | You want Claude to search and work in your mail |
 | [Microsoft 365 connector](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) | A work Outlook mailbox; personal Outlook.com accounts are not supported | An admin sets it up first; sending only if the admin turns it on | You are on a company Microsoft account |
 | An automation ([Zapier Email Parser](https://help.zapier.com/hc/en-us/articles/8496306000269-Set-up-your-Email-Parser-account-in-Zapier), Make, your own script) | Whatever you route into it | An hour or more; free up to 100 tasks a month, then a [paid plan](https://zapier.com/pricing) | You want Claude to reply or act on each email automatically |
-| [dearkarl](https://github.com/jaal/dearkarl) | Only the emails you forward | About 15 minutes with Claude Code | You want to hand Claude single emails as context, from any device |
+| [dearkarl](https://github.com/jaal/dearkarl-app/tree/master/self-hosted) | Only the emails you forward | About 15 minutes with Claude Code | You want to hand Claude single emails as context, from any device |
 
 Copy and paste still works, and for one email it is the fastest. It stops working when the email is on your phone and Claude Code is open on your laptop.
 
@@ -157,7 +157,7 @@ Copy and paste still works, and for one email it is the fastest. It stops workin
 
 dearkarl is an email-to-AI pipe: forward any email to your own secret address and it lands as a plain markdown file your next Claude Code session can read. It never asks for your mailbox.
 
-The self-hosted version runs on your own domain on Cloudflare, where [Email Routing](https://developers.cloudflare.com/email-service/get-started/route-emails/) is free and a subdomain works, and writes to a private GitHub repo you own. There is no server of ours in between. Setup takes about fifteen minutes: paste the [repo](https://github.com/jaal/dearkarl) URL into Claude Code and say *"install this"*. Only addresses on your allowlist get through. A [DMARC check](https://github.com/jaal/dearkarl#the-allowlist-alone-proves-nothing) that the mail really came from that domain logs its verdict by default, and one setting makes it block.
+The self-hosted version runs on your own domain on Cloudflare, where [Email Routing](https://developers.cloudflare.com/email-service/get-started/route-emails/) is free and a subdomain works, and writes to a private GitHub repo you own. There is no server of ours in between. Setup takes about fifteen minutes: paste the [repo](https://github.com/jaal/dearkarl-app/tree/master/self-hosted) URL into Claude Code and say *"install this"*. Only addresses on your allowlist get through. A [DMARC check](https://github.com/jaal/dearkarl-app/tree/master/self-hosted#the-allowlist-alone-proves-nothing) that the mail really came from that domain logs its verdict by default, and one setting makes it block.
 
 The pipe step by step, next to a connector, is in [Gmail connector or forwarding](/blog/email-connectors-vs-dearkarl). A hosted version, where you sign in instead of deploying, is not open yet. There is a waiting list below.
 
@@ -221,7 +221,7 @@ dearkarl comes in two versions: **self-hosted**, which runs on your own accounts
 | **Attachments** | Metadata only, no content | Not stored; the text of the email only | Not announced yet |
 | **Cost** | Included for all Claude users | Free and MIT licensed | Not announced yet |
 
-Sources: the [Gmail connector article](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors), [Claude Code's MCP documentation](https://code.claude.com/docs/en/mcp#use-mcp-servers-from-claude-ai), the [dearkarl README](https://github.com/jaal/dearkarl) and, for the hosted version, [dearkarl.com](https://dearkarl.com).
+Sources: the [Gmail connector article](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors), [Claude Code's MCP documentation](https://code.claude.com/docs/en/mcp#use-mcp-servers-from-claude-ai), the [dearkarl README](https://github.com/jaal/dearkarl-app/tree/master/self-hosted) and, for the hosted version, [dearkarl.com](https://dearkarl.com).
 
 ## When is a connector the better choice?
 
@@ -257,7 +257,7 @@ The **self-hosted** version runs entirely on your accounts:
 3. The file is committed to a **private GitHub repo** you own.
 4. Your next Claude Code session opens with a short note: *"2 new things arrived."*
 
-Mail is stored as untrusted data, never as instructions, and the code behind each of these claims is [public](https://github.com/jaal/dearkarl). To install, paste the repo URL into Claude Code and say *"install this"*.
+Mail is stored as untrusted data, never as instructions, and the code behind each of these claims is [public](https://github.com/jaal/dearkarl-app). To install, paste the repo URL into Claude Code and say *"install this"*.
 
 ## Is there a version without self-hosting?
 
