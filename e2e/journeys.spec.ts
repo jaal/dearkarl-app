@@ -288,6 +288,15 @@ test.describe("5. Tokens and leaving", () => {
     expect((await mcp(request, token, "tools/list")).status).toBe(200);
     await expect(page.getByText("Claude Code is connected to dearkarl.")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole("button", { name: "Copy prompt" })).toBeVisible();
+
+    // The prompt sends Claude Code to the published script, and the page
+    // links the same script so it can be read first; the script is served.
+    const script = "https://dearkarl.com/claude-code/dearkarl-check.sh";
+    await expect(page.locator("pre.prompt")).toContainText(script);
+    await expect(page.getByRole("link", { name: /dearkarl-check\.sh/ })).toHaveAttribute("href", script);
+    const served = await request.get("/claude-code/dearkarl-check.sh");
+    expect(served.status()).toBe(200);
+    expect(await served.text()).toMatch(/^#!\/usr\/bin\/env bash\n# dearkarl/);
   });
 
   test("a revoked Claude Code token stops working at once", async ({ page, request }) => {
