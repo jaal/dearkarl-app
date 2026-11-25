@@ -12,7 +12,12 @@ export const SITE = {
   description:
     "dearkarl is an email-to-AI pipe: forward any email to your own secret address and it lands as a plain markdown file your next Claude Code session can read. It never asks for your mailbox.",
   lang: "en",
-  repo: "https://github.com/jaal/dearkarl",
+  // One public repo: the hosted service, plus the MIT self-host version in
+  // self-hosted/.
+  repo: "https://github.com/jaal/dearkarl-app",
+  selfHost: "https://github.com/jaal/dearkarl-app/tree/master/self-hosted",
+  // The Claude plugin (MCP connector + skill), its own public repo.
+  plugin: "https://github.com/jaal/dearkarl-plugin",
   contact: "hi@dearkarl.com",
 };
 

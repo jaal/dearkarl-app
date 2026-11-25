@@ -1,8 +1,9 @@
 import React from "react";
 import { Steps } from "./Steps";
+import { SITE } from "./marketing/site";
 
 /** The self-hosting guide; the home page links the same place. */
-const SELF_HOST_URL = "https://github.com/jaal/dearkarl";
+const SELF_HOST_URL = SITE.selfHost;
 
 /** `driveUnticked`: they approved sign-in but left Google's Drive checkbox
     empty, so there is still nowhere for their mail to go. */

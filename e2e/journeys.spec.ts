@@ -345,7 +345,7 @@ test.describe("6. The site around it", () => {
     await page.goto("/app?error=access_denied");
     await expect(page.getByRole("link", { name: "Self-host instead" })).toHaveAttribute(
       "href",
-      "https://github.com/jaal/dearkarl",
+      "https://github.com/jaal/dearkarl-app/tree/master/self-hosted",
     );
   });
 
