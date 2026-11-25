@@ -1,0 +1,17 @@
+{
+  "name": "dearkarl",
+  "owner": {
+    "name": "Dear Karl",
+    "email": "hi@dearkarl.com"
+  },
+  "metadata": {
+    "description": "The official Dear Karl plugin for Claude."
+  },
+  "plugins": [
+    {
+      "name": "dearkarl",
+      "source": "./",
+      "description": "Email anything to your AI — list and read what you forwarded to your Dear Karl address."
+    }
+  ]
+}
