@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { listApiTokens } from "./server";
 import { CopyButton } from "./CopyButton";
-import { AUTO_CHECK_PROMPT, CHECK_EVERY_MINUTES } from "./claudeCodeLine";
+import { AUTO_CHECK_PROMPT, CHECK_EVERY_MINUTES, CHECK_SCRIPT_URL } from "./claudeCodeLine";
 
 /** How often the page asks whether Claude Code has connected yet. */
 const POLL_MS = 4000;
@@ -98,6 +98,12 @@ export function AutoCheck(props: {
             every {CHECK_EVERY_MINUTES} minutes while you work. Claude shows you
             the hook before saving it; the check only lists file names and
             opens nothing unless you ask.
+          </p>
+          <p className="small">
+            The hook is a short script you can read first:{" "}
+            <a href={CHECK_SCRIPT_URL} target="_blank" rel="noopener">
+              dearkarl-check.sh ↗
+            </a>
           </p>
           <div className="copyrow">
             <pre className="mono prompt">{AUTO_CHECK_PROMPT}</pre>
