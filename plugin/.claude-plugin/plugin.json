@@ -1,0 +1,22 @@
+{
+  "name": "dearkarl",
+  "displayName": "Dear Karl",
+  "version": "0.1.0",
+  "description": "Email anything to your AI. Forward an email to your secret Dear Karl address and Claude can list and read it as a file — read-only, and it never asks for your mailbox.",
+  "author": {
+    "name": "Dear Karl",
+    "email": "hi@dearkarl.com",
+    "url": "https://dearkarl.com"
+  },
+  "homepage": "https://dearkarl.com",
+  "repository": "https://github.com/jaal/dearkarl-plugin",
+  "license": "MIT",
+  "privacyPolicyUrl": "https://dearkarl.com/privacy",
+  "keywords": [
+    "email",
+    "inbox",
+    "google-drive",
+    "mcp",
+    "read-only"
+  ]
+}

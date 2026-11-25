@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "dearkarl": {
+      "type": "http",
+      "url": "https://dearkarl.com/mcp"
+    }
+  }
+}
