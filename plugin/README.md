@@ -1,5 +1,10 @@
 # Dear Karl for Claude
 
+> This directory is the Claude plugin for dearkarl, under the MIT licence
+> ([`LICENSE`](LICENSE)). Install it from
+> [`jaal/dearkarl-plugin`](https://github.com/jaal/dearkarl-plugin), as shown
+> below; that repo is where the plugin is published.
+
 **Email anything to your AI.** Dear Karl gives you a secret email address. Forward
 any email to it, and it is saved as a plain markdown file in a `dearkarl` folder in
 your own Google Drive. This plugin lets Claude list and read those files, so you
