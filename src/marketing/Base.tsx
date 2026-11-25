@@ -67,6 +67,7 @@ export default function Base(props: BaseProps): React.JSX.Element {
             <Link to="/privacy">Privacy · Prywatność</Link>
             <Link to="/terms">Terms · Regulamin</Link>
             <a href={SITE.repo}>Source on GitHub</a>
+            <a href={SITE.plugin}>Claude plugin on GitHub</a>
             <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a>
             <button
               className="linkish"
