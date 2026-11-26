@@ -96,6 +96,7 @@ function Connect(props: {
               className="copybtn"
               type="button"
               aria-label="Copy"
+              data-attr="connect-copy-line"
               data-copied={copied ? "1" : undefined}
               onClick={copy}
             >
@@ -105,7 +106,7 @@ function Connect(props: {
           </div>
         ) : (
           <div className="btn-row" style={{ marginTop: 0, marginBottom: 14 }}>
-            <button className="btn" onClick={generate} disabled={busy}>
+            <button className="btn" data-attr="connect-generate-token" onClick={generate} disabled={busy}>
               {busy ? "Generating…" : "Generate my token"}
             </button>
             <span className="small">
@@ -157,12 +158,13 @@ function Connect(props: {
 
         {token && (
           <div className="btn-row">
-            <button className="btn" onClick={props.onNext}>
+            <button className="btn" data-attr="connect-next" onClick={props.onNext}>
               Next: check for new mail
             </button>
             <button
               className="btn ghost"
               type="button"
+              data-attr="connect-new-token"
               onClick={generate}
               disabled={busy}
             >

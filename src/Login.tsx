@@ -111,7 +111,7 @@ export default function Login(): React.JSX.Element {
               </label>
               {error && <p role="alert" className={style.error}>{error}</p>}
               <div className="btn-row">
-                <button className="btn" type="submit" disabled={busy}>
+                <button className="btn" type="submit" data-attr="login-send-code" disabled={busy}>
                   Email me a code
                 </button>
               </div>
@@ -145,12 +145,13 @@ export default function Login(): React.JSX.Element {
                 </p>
               )}
               <div className="btn-row">
-                <button className="btn" type="submit" disabled={busy}>
+                <button className="btn" type="submit" data-attr="login-submit-code" disabled={busy}>
                   Log in
                 </button>
                 <button
                   className="btn ghost"
                   type="button"
+                  data-attr="login-resend-code"
                   disabled={busy}
                   onClick={async () => setResent(await sendCode(sentTo))}
                 >

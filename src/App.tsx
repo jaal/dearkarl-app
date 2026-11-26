@@ -418,7 +418,7 @@ function App(props: {
               )}
 
               <div className="btn-row">
-                <button className="btn" onClick={loginGoogle} disabled={busy}>
+                <button className="btn" data-attr="signup-google" onClick={loginGoogle} disabled={busy}>
                   <ContinueIcon />
                   Continue with Google
                 </button>
@@ -430,7 +430,7 @@ function App(props: {
               </p>
             </div>
             <p className="switch-auth">
-              Already have an account? <a href="/login">Log in</a>
+              Already have an account? <a href="/login" data-attr="signup-to-login">Log in</a>
             </p>
             </>
           )

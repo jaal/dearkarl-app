@@ -26,11 +26,11 @@ function CheckForMail(props: { onDone: () => void }): React.JSX.Element {
 
         <div className="btn-row">
           {shown ? (
-            <button className="btn" onClick={props.onDone}>
+            <button className="btn" data-attr="checkmail-done" onClick={props.onDone}>
               Done
             </button>
           ) : (
-            <button className="btn ghost" onClick={props.onDone}>
+            <button className="btn ghost" data-attr="checkmail-skip" onClick={props.onDone}>
               Skip for now
             </button>
           )}
