@@ -4,7 +4,7 @@ import GoogleDrive, { DriveAuthError } from "../google/drive";
 import GoogleToken from "../google/token";
 import UsersDB, { UserTableRow } from "../db";
 import { getValidToken } from "../api/utils";
-import { APP_URL } from "../../shared/urls";
+import { APP_URL, SITE_ORIGIN } from "../../shared/urls";
 
 /** Thrown when the user's Drive token cannot be obtained/refreshed. */
 export class ReauthNeededError extends Error {
@@ -44,7 +44,14 @@ function driveErrorResult(e: unknown) {
  */
 export function createMcpServer(deps: Deps): McpServer {
   const { user, client, db } = deps;
-  const server = new McpServer({ name: "dear-karl", version: "0.1.0" });
+  const server = new McpServer({
+    name: "dear-karl",
+    title: "Dear Karl",
+    version: "0.1.0",
+    websiteUrl: SITE_ORIGIN,
+    // Shown by clients (claude.ai, the directory portal) next to the server.
+    icons: [{ src: `${SITE_ORIGIN}/icon.png`, mimeType: "image/png", sizes: ["512x512"] }],
+  });
 
   /** Fresh GoogleDrive for this user, refreshing their access token if needed. */
   async function drive(): Promise<GoogleDrive> {
