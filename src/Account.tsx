@@ -118,7 +118,7 @@ function Account(props: {
               Google's screen is left unticked.
             </p>
             <div className="btn-row" style={{ marginTop: 12 }}>
-              <a className="btn" href="/app/reconnect">
+              <a className="btn" href="/app/reconnect" data-attr="account-reconnect">
                 Reconnect Google Drive
               </a>
             </div>
@@ -159,10 +159,11 @@ function Account(props: {
           ) : (
             <span className="v address-value">
               <span className="mono-inline">{karlAddress}</span>
-              <CopyButton text={karlAddress} label="Copy address" inline />
+              <CopyButton text={karlAddress} label="Copy address" inline attr="account-copy-address" />
               <button
                 className="btn ghost btn-sm"
                 type="button"
+                data-attr="account-change-address"
                 onClick={() => setEditingAddress(true)}
               >
                 Change
@@ -203,6 +204,7 @@ function Account(props: {
           </span>
           <button
             className="btn ghost"
+            data-attr="account-logout"
             onClick={props.onLogout}
             disabled={props.busy}
           >
@@ -240,6 +242,7 @@ function Account(props: {
               </button>
               <button
                 className="btn"
+                data-attr="account-delete-confirm"
                 onClick={props.onDeleteAccount}
                 disabled={props.busy}
               >
@@ -249,6 +252,7 @@ function Account(props: {
           ) : (
             <button
               className="btn ghost"
+              data-attr="account-delete"
               onClick={() => setConfirmingDelete(true)}
               disabled={props.busy}
             >

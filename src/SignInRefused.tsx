@@ -39,10 +39,10 @@ function SignInRefused(props: {
         </p>
 
         <div className="btn-row">
-          <button className="btn" onClick={props.onRetry}>
+          <button className="btn" data-attr="signin-refused-retry" onClick={props.onRetry}>
             Try again
           </button>
-          <a className="btn ghost" href={SELF_HOST_URL}>
+          <a className="btn ghost" href={SELF_HOST_URL} data-attr="signin-refused-selfhost">
             Self-host instead
           </a>
         </div>

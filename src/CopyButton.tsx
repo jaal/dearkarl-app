@@ -41,6 +41,8 @@ export function CopyButton(props: {
   text: string;
   label?: string;
   inline?: boolean;
+  /** Stable name for analytics (data-attr); never the copied text. */
+  attr?: string;
 }): React.JSX.Element {
   const [copied, setCopied] = useState(false);
 
@@ -61,6 +63,7 @@ export function CopyButton(props: {
       aria-label={copied ? "Copied" : (props.label ?? "Copy")}
       title={copied ? "Copied" : (props.label ?? "Copy")}
       data-copied={copied ? "1" : undefined}
+      data-attr={props.attr}
       onClick={copy}
     >
       <CopySheetsIcon />

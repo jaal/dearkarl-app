@@ -101,13 +101,13 @@ export function AutoCheck(props: {
           </p>
           <p className="small">
             The hook is a short script you can read first:{" "}
-            <a href={CHECK_SCRIPT_URL} target="_blank" rel="noopener">
+            <a href={CHECK_SCRIPT_URL} target="_blank" rel="noopener" data-attr="autocheck-view-script">
               dearkarl-check.sh ↗
             </a>
           </p>
           <div className="copyrow">
             <pre className="mono prompt">{AUTO_CHECK_PROMPT}</pre>
-            <CopyButton text={AUTO_CHECK_PROMPT} label="Copy prompt" />
+            <CopyButton text={AUTO_CHECK_PROMPT} label="Copy prompt" attr="autocheck-copy-prompt" />
           </div>
         </>
       ) : (
@@ -128,6 +128,7 @@ export function AutoCheck(props: {
           <button
             className="btn ghost btn-sm"
             type="button"
+            data-attr="autocheck-check-now"
             onClick={() => check(true)}
             disabled={checking}
           >
@@ -136,6 +137,7 @@ export function AutoCheck(props: {
           <button
             className="linkbtn small"
             type="button"
+            data-attr="autocheck-reveal"
             onClick={() => setRevealed(true)}
             style={{ marginLeft: 8 }}
           >

@@ -21,7 +21,7 @@ function Address(props: {
 
         <div className="copyrow">
           <code className="mono address">{karlAddress}</code>
-          <CopyButton text={karlAddress} />
+          <CopyButton text={karlAddress} attr="address-copy" />
         </div>
         <p className="small">
           One click selects the whole line; the icon copies it.
@@ -54,7 +54,7 @@ function Address(props: {
         </div>
 
         <div className="btn-row" style={{ marginTop: 22 }}>
-          <button className="btn" onClick={props.onNext}>
+          <button className="btn" data-attr="address-next" onClick={props.onNext}>
             Next: connect Claude Code
           </button>
         </div>

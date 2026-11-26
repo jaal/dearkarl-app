@@ -101,7 +101,7 @@ export function ApiTokens(): React.JSX.Element {
         <>
           <div className="copyrow">
             <code className="mono">{connectCommand(token)}</code>
-            <CopyButton text={connectCommand(token)} label="Copy line" />
+            <CopyButton text={connectCommand(token)} label="Copy line" attr="tokens-copy-line" />
           </div>
           <p className="small">
             The token in this line is shown only while you're here. Lost it?
@@ -109,6 +109,7 @@ export function ApiTokens(): React.JSX.Element {
             <button
               className="linkbtn"
               type="button"
+              data-attr="tokens-new-line"
               onClick={() => generate("Claude Code")}
               disabled={busy}
             >
@@ -121,6 +122,7 @@ export function ApiTokens(): React.JSX.Element {
           <button
             className="btn"
             type="button"
+            data-attr="tokens-generate"
             onClick={() => generate("Claude Code")}
             disabled={busy}
           >
@@ -145,7 +147,7 @@ export function ApiTokens(): React.JSX.Element {
       </p>
       <div className="copyrow">
         <code className="mono">{mcpUrl()}</code>
-        <CopyButton text={mcpUrl()} label="Copy URL" />
+        <CopyButton text={mcpUrl()} label="Copy URL" attr="tokens-copy-mcp-url" />
       </div>
 
       <h3>Personal access tokens</h3>
