@@ -9,7 +9,7 @@ This repository holds both versions of dearkarl:
 | Directory | What it is | Licence |
 |---|---|---|
 | [`self-hosted/`](self-hosted/) | **The open-source version.** You run it on your own Cloudflare domain and it never talks to us. Install it with Claude Code in about 15 minutes. | MIT ([`self-hosted/LICENSE`](self-hosted/LICENSE)) |
-| [`plugin/`](plugin/) | **The Claude plugin.** A read-only MCP connector and skill that let Claude list and read what you forwarded. Installed from [jaal/dearkarl-plugin](https://github.com/jaal/dearkarl-plugin). | MIT ([`plugin/LICENSE`](plugin/LICENSE)) |
+| [`plugin/`](plugin/) | **The Claude plugin.** A read-only MCP connector and skill that let Claude list and read what you forwarded. Install it with `/plugin install dearkarl --marketplace jaal/dearkarl-app`. | MIT ([`plugin/LICENSE`](plugin/LICENSE)) |
 | everything else | The hosted service running at [dearkarl.com](https://dearkarl.com): site, account app, mail handling, MCP server. | All rights reserved |
 
 ## Why the hosted code is public
