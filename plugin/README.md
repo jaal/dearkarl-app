@@ -1,9 +1,7 @@
 # Dear Karl for Claude
 
 > This directory is the Claude plugin for dearkarl, under the MIT licence
-> ([`LICENSE`](LICENSE)). Install it from
-> [`jaal/dearkarl-plugin`](https://github.com/jaal/dearkarl-plugin), as shown
-> below; that repo is where the plugin is published.
+> ([`LICENSE`](LICENSE)). The rest of this repository is not covered by it.
 
 **Email anything to your AI.** Dear Karl gives you a secret email address. Forward
 any email to it, and it is saved as a plain markdown file in a `dearkarl` folder in
@@ -30,7 +28,7 @@ Nothing in this plugin can send email, or create, change or delete files.
 2. Install the plugin:
 
    ```
-   /plugin install dearkarl --marketplace jaal/dearkarl-plugin
+   /plugin install dearkarl --marketplace jaal/dearkarl-app
    ```
 
    Then connect it: in Claude Code run `/mcp`, pick

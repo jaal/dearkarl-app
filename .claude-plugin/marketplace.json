@@ -5,12 +5,12 @@
     "email": "hi@dearkarl.com"
   },
   "metadata": {
-    "description": "The official Dear Karl plugin for Claude."
+    "description": "Dear Karl for Claude: read what you forwarded to your Dear Karl address."
   },
   "plugins": [
     {
       "name": "dearkarl",
-      "source": "./",
+      "source": "./plugin",
       "description": "Email anything to your AI — list and read what you forwarded to your Dear Karl address."
     }
   ]
