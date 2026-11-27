@@ -16,8 +16,8 @@ export const SITE = {
   // self-hosted/.
   repo: "https://github.com/jaal/dearkarl-app",
   selfHost: "https://github.com/jaal/dearkarl-app/tree/master/self-hosted",
-  // The Claude plugin (MCP connector + skill); a copy lives in plugin/.
-  plugin: "https://github.com/jaal/dearkarl-app/tree/master/plugin",
+  // The Claude plugin (MCP connector + skill), published by Technologie 21.
+  plugin: "https://github.com/Technologie-21/dearkarl-plugin",
   contact: "hi@dearkarl.com",
 };
 
