@@ -46,7 +46,7 @@ export function createMcpServer(deps: Deps): McpServer {
   const { user, client, db } = deps;
   const server = new McpServer({
     name: "dear-karl",
-    title: "Dear Karl",
+    title: "DearKarl",
     version: "0.1.0",
     websiteUrl: SITE_ORIGIN,
     // Shown by clients (claude.ai, the directory portal) next to the server.
@@ -71,7 +71,7 @@ export function createMcpServer(deps: Deps): McpServer {
     {
       title: "List Saved Files",
       description:
-        "List the files saved to the user's Dear Karl folder in Google Drive " +
+        "List the files saved to the user's DearKarl folder in Google Drive " +
         "(the dearkarl folder). Returns file metadata (id, name, mimeType, " +
         "size, modifiedTime) without contents. Use the returned file id or " +
         "name with read_file to get the contents.",
@@ -99,7 +99,7 @@ export function createMcpServer(deps: Deps): McpServer {
     {
       title: "Read File Contents",
       description:
-        "Read the text contents of a file saved in the user's Dear Karl " +
+        "Read the text contents of a file saved in the user's DearKarl " +
         "Google Drive folder. Provide exactly one of fileId (the id returned " +
         "by list_files) or name (the file name). Contents are capped at " +
         "256 KB.",
@@ -144,7 +144,7 @@ export function createMcpServer(deps: Deps): McpServer {
               content: [
                 {
                   type: "text" as const,
-                  text: `No file named "${args.name}" found in your Dear Karl folder. Use list_files to see available files.`,
+                  text: `No file named "${args.name}" found in your DearKarl folder. Use list_files to see available files.`,
                 },
               ],
             };
