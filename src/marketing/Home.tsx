@@ -48,9 +48,18 @@ const FAQ = [
   },
   {
     q: "Does this page track me?",
-    a: `<p>No. There are no analytics, no tracking or ad cookies, and nothing loads from
-        anyone else — not even the fonts. The only cookie is the one that keeps you signed in,
-        and it exists only after you sign in.</p>`,
+    a: `<p>Only if you say yes. The site asks once whether it may count your visit with
+        PostHog analytics, so we can see which pages people read and where they came from.
+        Until you answer, and if you say no, the analytics are not even started: nothing is
+        sent, and nothing is stored on your device except your answer.</p>
+        <p>If you say yes, PostHog gets the page you viewed, the page you came from, your
+        browser and device type, and your country, looked up from your IP address, which is
+        then discarded. A cookie recognises this browser for up to a year. We never link it to
+        your name or email, and there are no session recordings, heatmaps or ad cookies.</p>
+        <p>The events go through dearkarl.com to PostHog's EU cloud, so nothing on the page
+        loads from anyone else, not even the fonts. To change your answer, use
+        <b>Cookie settings</b> in the footer: saying no deletes the cookie. The details are in
+        the <a href="/privacy#en">privacy notice</a>.</p>`,
   },
   {
     q: "Is the code public?",
