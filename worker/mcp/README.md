@@ -1,4 +1,4 @@
-# Dear Karl MCP server
+# DearKarl MCP server
 
 The worker exposes a **Model Context Protocol** endpoint at `/mcp` that lets MCP
 clients (Claude desktop, IDEs, scripts) read the files a user has saved to their
@@ -120,7 +120,7 @@ Both tools are marked `readOnlyHint: true`.
 
 ### `list_files`
 
-List the files saved in the user's Dear Karl Drive folder ("dearkarl").
+List the files saved in the user's DearKarl Drive folder ("dearkarl").
 
 - **Input**: `{}`
 - **Output text**: pretty-printed JSON array of file metadata:

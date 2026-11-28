@@ -136,7 +136,7 @@ describe("initialize", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.result.serverInfo.name).toBe("dear-karl");
-    expect(body.result.serverInfo.title).toBe("Dear Karl");
+    expect(body.result.serverInfo.title).toBe("DearKarl");
     expect(body.result.serverInfo.icons).toEqual([
       { src: "https://dearkarl.com/icon.png", mimeType: "image/png", sizes: ["512x512"] },
     ]);
